@@ -31,7 +31,7 @@ public class DemoApplication {
 	}
 
 	@GetMapping("/mia")
-	public @ResponseBody ResponseEntity<Resource> mia() throws Exception {
+	public @ResponseBody ResponseEntity<Resource> mia(@RequestParam(value = "threshold", defaultValue = "1.0") String threshold) throws Exception {
 		String inputFilePath = "src/main/resources/mia/TestImage.tif";
 		String workflowPath = "src/main/resources/mia/ExampleWorkflow.mia";
 
@@ -39,6 +39,7 @@ public class DemoApplication {
 		Workspace workspace = workspaces.getNewWorkspace(new File(inputFilePath), 1);
 
 		Modules modules = AnalysisReader.loadModules(new File(workflowPath));
+        modules.getModuleByID("1636961828208").updateParameterValue("Threshold multiplier", Float.parseFloat(threshold));
 		modules.execute(workspace);
 
 		Resource imageResource = new ClassPathResource("mia/TestImage_S1_binary.tif");
