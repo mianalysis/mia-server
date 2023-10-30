@@ -42,10 +42,10 @@ public class DemoApplication {
         modules.getModuleByID("1636961828208").updateParameterValue("Threshold multiplier", Float.parseFloat(threshold));
 		modules.execute(workspace);
 
-		Resource imageResource = new ClassPathResource("mia/TestImage_S1_binary.tif");
+		Resource imageResource = new ClassPathResource("mia/TestImage_S1_binary.png");
 
 		return ResponseEntity.ok()
-				.contentType(new MediaType("image", "tiff"))
+				.contentType(new MediaType("image", "png"))
 				.body(imageResource);
 	}
 }
