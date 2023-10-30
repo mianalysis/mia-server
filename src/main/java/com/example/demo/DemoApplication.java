@@ -4,25 +4,27 @@ import java.io.File;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.core.io.Resource;
+import org.springframework.web.bind.annotation.RestController;
 
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.Workspaces;
+import io.github.mianalysis.mia.object.image.Image;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
-import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @RestController
 public class DemoApplication {
+	private ServerImageRenderer serverImageRenderer = new ServerImageRenderer();
+
 	public static void main(String[] args) {
 		SpringApplication.run(DemoApplication.class, args);
+		
 	}
 
 	@GetMapping("/hello")
@@ -31,7 +33,10 @@ public class DemoApplication {
 	}
 
 	@GetMapping("/mia")
-	public @ResponseBody ResponseEntity<Resource> mia(@RequestParam(value = "threshold", defaultValue = "1.0") String threshold) throws Exception {
+	public @ResponseBody ResponseEntity<byte[]> mia(@RequestParam(value = "threshold", defaultValue = "1.0") String threshold) throws Exception {
+		Image.setDefaultRenderer(serverImageRenderer);
+		serverImageRenderer.clearLastOutput();
+
 		String inputFilePath = "src/main/resources/mia/TestImage.tif";
 		String workflowPath = "src/main/resources/mia/ExampleWorkflow.mia";
 
@@ -42,10 +47,12 @@ public class DemoApplication {
         modules.getModuleByID("1636961828208").updateParameterValue("Threshold multiplier", Float.parseFloat(threshold));
 		modules.execute(workspace);
 
-		Resource imageResource = new ClassPathResource("mia/TestImage_S1_binary.png");
+		while (serverImageRenderer.getLastOutputImage() == null)
+			Thread.sleep(10);
 
 		return ResponseEntity.ok()
 				.contentType(new MediaType("image", "png"))
-				.body(imageResource);
+				.body(serverImageRenderer.getLastOutputImage());
+
 	}
 }
