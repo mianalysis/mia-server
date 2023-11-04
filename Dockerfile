@@ -5,7 +5,7 @@ WORKDIR /staging
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
-RUN unset MAVEN_CONFIG && ./mvnw dependency:go-offline
+RUN unset MAVEN_CONFIG && ./mvnw dependency:go-offline -q -B
 
 # Copy the source code and build the application
 COPY src src
