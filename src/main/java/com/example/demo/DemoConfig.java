@@ -3,8 +3,6 @@ package com.example.demo;
 import java.io.File;
 
 import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.object.Workspace;
-import io.github.mianalysis.mia.object.Workspaces;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 
 import org.springframework.context.annotation.Configuration;
@@ -14,16 +12,6 @@ import org.springframework.context.annotation.ScopedProxyMode;
 
 @Configuration
 public class DemoConfig {
-	
-    @Bean
-    @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public Workspace getWorkspace() throws Exception {
-        String inputFilePath = "src/main/resources/mia/TestImage.tif";
-
-        Workspaces workspaces = new Workspaces();
-
-        return workspaces.getNewWorkspace(new File(inputFilePath), 1);
-    }
 
     @Bean
     @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
