@@ -4,8 +4,8 @@ import javax.annotation.Resource;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.stereotype.Controller;
 
@@ -23,12 +23,13 @@ public class DemoController {
 	@Resource(name = "getModules")
 	Modules modules;
 
-	@GetMapping("/mia")
-	public @ResponseBody ResponseEntity<byte[]> mia(@RequestParam(value = "threshold", defaultValue = "1.0") String threshold) throws Exception {
+	@MessageMapping("/process")
+  @SendToUser("/queue/result")
+	public @ResponseBody ResponseEntity<byte[]> process(ProcessRequest request) throws Exception {
 		Image.setDefaultRenderer(serverImageRenderer);
 		serverImageRenderer.clearLastOutput();
 
-		modules.getModuleByID("1636961828208").updateParameterValue("Threshold multiplier", Float.parseFloat(threshold));
+		modules.getModuleByID("1636961828208").updateParameterValue("Threshold multiplier", request.getThreshold());
 		modules.execute(workspace);
 
 		while (serverImageRenderer.getLastOutputImage() == null)

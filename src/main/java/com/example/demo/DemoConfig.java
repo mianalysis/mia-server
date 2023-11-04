@@ -11,14 +11,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.web.context.WebApplicationContext;
 
 @Configuration
 public class DemoConfig {
 	
     @Bean
-    @Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public Workspace getWorkspace() {
+    @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public Workspace getWorkspace() throws Exception {
         String inputFilePath = "src/main/resources/mia/TestImage.tif";
 
         Workspaces workspaces = new Workspaces();
@@ -27,7 +26,7 @@ public class DemoConfig {
     }
 
     @Bean
-    @Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+    @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
     public Modules getModules() throws Exception {
         String workflowPath = "src/main/resources/mia/ExampleWorkflow.mia";
         
