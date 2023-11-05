@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.demo.config;
 
 import java.io.File;
 
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 
 @Configuration
-public class DemoConfig {
+public class BeanConfig {
 
     @Bean
     @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)

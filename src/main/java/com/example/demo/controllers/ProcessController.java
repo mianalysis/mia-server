@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.demo.controllers;
 
 import javax.annotation.Resource;
 
@@ -10,13 +10,15 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.stereotype.Controller;
 
+import com.example.demo.ServerImageRenderer;
 import com.example.demo.beans.CloudWorkspace;
+import com.example.demo.requests.ProcessRequest;
 
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.image.Image;
 
 @Controller
-public class DemoController {
+public class ProcessController {
 	private ServerImageRenderer serverImageRenderer = new ServerImageRenderer();
 
 	@Autowired
