@@ -33,6 +33,7 @@ public class CloudWorkspace {
   @PostConstruct
   public void init() {
     // Invoked after dependencies injected
+    System.out.println("Creating CloudWorkspace");
   }
 
   @PreDestroy
