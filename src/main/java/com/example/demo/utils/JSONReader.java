@@ -1,0 +1,32 @@
+package com.example.demo.utils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.json.JSONObject;
+import org.xml.sax.SAXException;
+
+import io.github.mianalysis.mia.module.Modules;
+import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
+
+public class JSONReader {
+    public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, IOException, ParserConfigurationException, SAXException, InterruptedException {
+        String workflowPath = "src/main/resources/mia/Ex1_NucleiSegmentation.mia";
+        Modules modules = AnalysisReader.loadModules(new File(workflowPath));
+
+        String jsonPath = "src/main/resources/mia/Ex1.json";
+        JSONObject jsonObject = new JSONObject(new BufferedReader(new FileReader(jsonPath)).readLine());
+        
+        setParametersFromJSON(jsonObject, modules);
+
+    }
+
+    public static void setParametersFromJSON(JSONObject jsonObject, Modules modules) {
+
+    }
+}
