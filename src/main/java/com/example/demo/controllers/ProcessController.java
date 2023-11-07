@@ -7,12 +7,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.example.demo.ServerImageRenderer;
 import com.example.demo.beans.CloudWorkspace;
 import com.example.demo.requests.ProcessRequest;
+import com.example.demo.utils.ServerImageRenderer;
 
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.image.Image;
@@ -28,7 +28,7 @@ public class ProcessController {
 	Modules modules;
 
 	@MessageMapping("/process")
-  @SendToUser("/queue/result")
+  	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<byte[]> process(ProcessRequest request) throws Exception {
 		Image.setDefaultRenderer(serverImageRenderer);
 		serverImageRenderer.clearLastOutput();

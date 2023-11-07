@@ -112,6 +112,7 @@ public class JSONWriter {
         jsonObject.put("name", module.getName());
         jsonObject.put("nickname", module.getNickname());
         jsonObject.put("canBeDisabled", module.canBeDisabled());
+        jsonObject.put("enabled", module.isEnabled());
         jsonObject.put("visibleTitle", module.canShowProcessingTitle());
 
         JSONArray jsonArray = new JSONArray();
@@ -130,7 +131,6 @@ public class JSONWriter {
     public static JSONObject getParameterJSON(Parameter parameter) {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("id", parameter.hashCode());
         jsonObject.put("name", parameter.getName());
         jsonObject.put("nickname", parameter.getNickname());
         jsonObject.put("value", parameter.getRawStringValue());
