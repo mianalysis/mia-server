@@ -1,24 +1,19 @@
 package com.example.demo;
 
-import java.io.File;
-
 import javax.annotation.Resource;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.stereotype.Controller;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import com.example.demo.utils.ServerImageRenderer;
 
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.Workspace;
-import io.github.mianalysis.mia.object.Workspaces;
 import io.github.mianalysis.mia.object.image.Image;
-import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 
 @Controller
 public class DemoController {
