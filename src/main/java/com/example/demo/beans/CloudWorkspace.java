@@ -1,7 +1,6 @@
 package com.example.demo.beans;
 
 import java.io.File;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
@@ -19,7 +18,7 @@ public class CloudWorkspace {
   private final Workspace workspace;
 
   public CloudWorkspace() throws Exception {
-    String inputFilePath = "src/main/resources/mia/TestImage.tif";
+    String inputFilePath = "src/main/resources/mia/images/TestImage.tif";
 
     Workspaces workspaces = new Workspaces();
 
