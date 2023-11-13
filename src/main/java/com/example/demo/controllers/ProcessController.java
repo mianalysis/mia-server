@@ -48,8 +48,7 @@ public class ProcessController {
 
 	@MessageMapping("/getparameters")
   	@SendToUser("/queue/parameters")
-	public @ResponseBody ResponseEntity<String> getparameters(ProcessRequest request) throws Exception {
-		System.out.println("Sending parameters to client");
+	public @ResponseBody ResponseEntity<String> getparameters() throws Exception {
 		return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_JSON)
             .body(JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()).toString());
