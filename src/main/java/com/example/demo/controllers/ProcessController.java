@@ -2,7 +2,6 @@ package com.example.demo.controllers;
 
 import javax.annotation.Resource;
 
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,12 +11,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.demo.beans.CloudWorkspace;
-import com.example.demo.requests.ProcessRequest;
+import com.example.demo.requests.SetParameterRequest;
 import com.example.demo.utils.JSONWriter;
 import com.example.demo.utils.ServerImageRenderer;
 
+import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.image.Image;
+import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 
 @Controller
 public class ProcessController {
@@ -31,11 +32,10 @@ public class ProcessController {
 
 	@MessageMapping("/process")
   	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<byte[]> process(ProcessRequest request) throws Exception {
+	public @ResponseBody ResponseEntity<byte[]> process() throws Exception {
 		Image.setDefaultRenderer(serverImageRenderer);
 		serverImageRenderer.clearLastOutput();
 
-		modules.getModuleByID("1636961828208").updateParameterValue("Threshold multiplier", request.getThreshold());
 		modules.execute(cloudWorkspace.getWorkspace());
 
 		while (serverImageRenderer.getLastOutputImage() == null)
@@ -52,5 +52,25 @@ public class ProcessController {
 		return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_JSON)
             .body(JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()).toString());
+	}
+
+	@MessageMapping("/setparameter")
+	@SendToUser("/queue/parameters")
+	public @ResponseBody ResponseEntity<String> setparameter(SetParameterRequest request) throws Exception {
+		Image.setDefaultRenderer(serverImageRenderer);
+		serverImageRenderer.clearLastOutput();
+
+		for (Module module:modules.values()) {
+			if (module.getModuleID().equals(request.getModuleID())) {
+				Parameter parameter = module.getParameter(request.getParameterName());
+				parameter.setValueFromString(request.getParameterValue());
+				break;
+			}
+		}
+
+		return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()).toString());
+
 	}
 }

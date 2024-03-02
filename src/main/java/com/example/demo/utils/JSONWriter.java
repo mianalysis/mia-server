@@ -42,7 +42,7 @@ public class JSONWriter {
 
     public static JSONObject getModulesJSON(Modules modules, Workspace workspace) {
         loadSeparator = new GUISeparator(modules);
-        JSONObject json = new JSONObject();
+        JSONObject json = new JSONObject();        
 
         AnalysisTester.testModule(modules.getInputControl(), modules);
         AnalysisTester.testModule(modules.getOutputControl(), modules);

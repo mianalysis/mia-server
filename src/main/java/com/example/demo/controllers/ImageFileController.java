@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ImageFileController {
 
-      private static final Path SAMPLE_IMAGE_DIRECTORY = Path.of("src/main/resources/mia/images/");
+      private static final Path SAMPLE_IMAGE_DIRECTORY = Paths.get("src/main/resources/mia/images/");
 
       private final Set<String> imageFiles = listFiles();
 
