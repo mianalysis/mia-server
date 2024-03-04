@@ -19,6 +19,7 @@ import io.github.mianalysis.mia.module.core.OutputControl;
 import io.github.mianalysis.mia.module.system.GUISeparator;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.parameters.BooleanP;
+import io.github.mianalysis.mia.object.parameters.abstrakt.ChoiceType;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisTester;
@@ -135,6 +136,15 @@ public class JSONWriter {
         jsonObject.put("nickname", parameter.getNickname());
         jsonObject.put("value", parameter.getRawStringValue());
         jsonObject.put("type", parameter.getClass().getSimpleName());
+
+        if (parameter instanceof ChoiceType) {
+            JSONArray choices = new JSONArray();
+            for (String choice:((ChoiceType) parameter).getChoices())
+                choices.put(choice);
+            
+            jsonObject.put("choices", choices);
+            
+        }
 
         return jsonObject;
 

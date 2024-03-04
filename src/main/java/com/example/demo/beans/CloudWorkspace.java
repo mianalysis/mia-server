@@ -23,6 +23,7 @@ public class CloudWorkspace {
     Workspaces workspaces = new Workspaces();
 
     workspace = workspaces.getNewWorkspace(new File(inputFilePath), 1);
+    
   }
 
   public Workspace getWorkspace() {
