@@ -16,8 +16,9 @@ public class BeanConfig {
     @Bean
     @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
     public Modules getModules() throws Exception {
-        String workflowPath = "src/main/resources/mia/ExampleWorkflow.mia";
+        String workflowPath = "src/main/resources/mia/What is an imageQ$.mia";
         
         return AnalysisReader.loadModules(new File(workflowPath));
+
     }
 }
