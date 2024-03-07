@@ -95,7 +95,7 @@ public class ModuleGroups extends TreeMap<Integer, ModuleGroup> {
     }
 
     public boolean nextGroup() {
-        if (groupIdx == maxIdx-1)
+        if (groupIdx == maxIdx)
             return false;
 
         groupIdx++;

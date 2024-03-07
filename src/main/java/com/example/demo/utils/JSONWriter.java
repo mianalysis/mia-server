@@ -19,18 +19,20 @@ import io.github.mianalysis.mia.module.core.OutputControl;
 import io.github.mianalysis.mia.module.system.GUISeparator;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.parameters.BooleanP;
+import io.github.mianalysis.mia.object.parameters.ParameterGroup;
+import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.parameters.abstrakt.ChoiceType;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisTester;
 
 public class JSONWriter {
-    private static GUISeparator loadSeparator;
+private static GUISeparator loadSeparator;
 
-    public static void main(String[] args)
+        public static void main(String[] args)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException,
             InvocationTargetException, IOException, ParserConfigurationException, SAXException {
-        String workflowPath = "src/main/resources/mia/Ex1_NucleiSegmentation.mia";
+        String workflowPath = "src/main/resources/mia/What is an imageQ$.mia";
         Modules modules = AnalysisReader.loadModules(new File(workflowPath));
 
         JSONObject json = getModulesJSON(modules, null);
@@ -116,16 +118,23 @@ public class JSONWriter {
         jsonObject.put("enabled", module.isEnabled());
         jsonObject.put("visibleTitle", module.canShowProcessingTitle());
 
-        JSONArray jsonArray = new JSONArray();
-        for (Parameter parameter : module.updateAndGetParameters().values())
-            if (parameter.isVisible())
-                jsonArray.put(getParameterJSON(parameter));
+        JSONArray jsonArray = getParameters(module.updateAndGetParameters());
         jsonObject.put("parameters", jsonArray);
 
         if (module instanceof GUISeparator)
             jsonObject.put("expanded", module.getParameterValue(GUISeparator.EXPANDED_PROCESSING, null).toString());
 
         return jsonObject;
+
+    }
+
+    public static JSONArray getParameters(Parameters parameters) {
+        JSONArray jsonArray = new JSONArray();
+        for (Parameter parameter : parameters.values())
+            if (parameter.isVisible() || parameter instanceof ParameterGroup)
+                jsonArray.put(getParameterJSON(parameter));
+
+        return jsonArray;
 
     }
 
@@ -136,6 +145,7 @@ public class JSONWriter {
         jsonObject.put("nickname", parameter.getNickname());
         jsonObject.put("value", parameter.getRawStringValue());
         jsonObject.put("type", parameter.getClass().getSimpleName());
+        jsonObject.put("visible", parameter.isVisible());
 
         if (parameter instanceof ChoiceType) {
             JSONArray choices = new JSONArray();
@@ -144,6 +154,18 @@ public class JSONWriter {
             
             jsonObject.put("choices", choices);
             
+        }
+
+        if (parameter instanceof ParameterGroup) {
+            JSONArray jsonArrayCollections = new JSONArray();
+            for (Parameters collection:((ParameterGroup) parameter).getCollections(true).values()) {
+                JSONArray jsonArrayParameters = getParameters(collection);
+                for (Object jsonObjectParameters:jsonArrayParameters)
+                    jsonArrayCollections.put(jsonObjectParameters);
+            }
+            
+            jsonObject.put("collections", jsonArrayCollections);
+
         }
 
         return jsonObject;
