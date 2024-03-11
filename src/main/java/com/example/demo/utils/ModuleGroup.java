@@ -50,7 +50,7 @@ public class ModuleGroup {
 
     }
 
-    public void execute(Modules modules, Workspace workspace) {
+    public boolean execute(Modules modules, Workspace workspace) {
         AnalysisTester.testModules(modules, workspace);
 
         for (int idx = startIdx; idx < endIdx; idx++) {
@@ -78,13 +78,16 @@ public class ModuleGroup {
                             break;
                         case FAIL:
                             System.err.println("Module " + module.getName() + " failed to complete.");
-                            break;
+                            return false;
                     }
                 } catch (Exception e1) {
                     e1.printStackTrace();
-                    break;
+                    return false;
                 }
             }
         }
+
+        return true;
+        
     }
 }

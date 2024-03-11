@@ -1,25 +1,17 @@
 package com.example.demo.modules;
 
-import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.example.demo.controllers.ProcessController;
 import com.example.demo.utils.ProcessResult;
 
 import io.github.mianalysis.mia.module.AvailableModules;
-import io.github.mianalysis.mia.module.Categories;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.parameters.InputImageP;
 import io.github.mianalysis.mia.object.parameters.Parameters;
-import io.github.mianalysis.mia.object.parameters.text.TextAreaP;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
@@ -34,10 +26,9 @@ import net.imagej.patcher.LegacyInjector;
  */
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 
-public class DisplayMessage extends Module {
+public class DisplayImage extends Module {
 
-    public static final String TEXT = "Text to display";
-    
+    public static final String IMAGE = "Image to display";
 
     public static void main(String[] args) {
         // The following must be called before initialising ImageJ
@@ -50,13 +41,13 @@ public class DisplayMessage extends Module {
         new ImageJ().command().run("io.github.mianalysis.mia.MIAGUI", false);
 
         // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(DisplayMessage.class);
+        AvailableModules.addModuleName(DisplayImage.class);
 
     }
 
-    public DisplayMessage(Modules modules) {
+    public DisplayImage(Modules modules) {
         // The first argument is the name by which the module will be seen in the GUI.
-        super("Display mesage", modules);
+        super("Display image", modules);
     }
 
     @Override
@@ -74,27 +65,10 @@ public class DisplayMessage extends Module {
         return "";
     }
 
-    // @SendToUser("/queue/message")
-    // public @ResponseBody ResponseEntity<String> sendMessage(String message) throws Exception {
-    //     return ResponseEntity.ok()
-    //             .contentType(MediaType.APPLICATION_JSON)
-    //             .body(getMessage(message).toString());
-    // }
-
-    // public static JSONObject getMessage(String message) {
-    //     JSONObject json = new JSONObject();
-
-    //     json.put("message", message);
-
-    //     return json;
-
-    // }
-
     @Override
     public Status process(Workspace workspace) {
         try {
-            ProcessResult.message = parameters.getValue(TEXT, workspace);
-            // sendMessage(parameters.getValue(TEXT, workspace));
+            ProcessResult.image = workspace.getImage(parameters.getValue(IMAGE, workspace));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -104,7 +78,7 @@ public class DisplayMessage extends Module {
 
     @Override
     protected void initialiseParameters() {
-        parameters.add(new TextAreaP(TEXT, this, true));
+        parameters.add(new InputImageP(IMAGE, this));
     }
 
     @Override

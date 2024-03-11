@@ -2,6 +2,8 @@ package com.example.demo.controllers;
 
 import javax.annotation.Resource;
 
+import org.jfree.data.json.impl.JSONArray;
+import org.jfree.data.json.impl.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import com.example.demo.beans.CloudWorkspace;
 import com.example.demo.requests.SetParameterRequest;
 import com.example.demo.utils.JSONWriter;
 import com.example.demo.utils.ModuleGroups;
+import com.example.demo.utils.ProcessResult;
 import com.example.demo.utils.ServerImageRenderer;
 
 import io.github.mianalysis.mia.module.Module;
@@ -23,8 +26,6 @@ import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 
 @Controller
 public class ProcessController {
-	private ServerImageRenderer serverImageRenderer = new ServerImageRenderer();
-
 	@Autowired
 	private CloudWorkspace cloudWorkspace;
 
@@ -36,19 +37,22 @@ public class ProcessController {
 
 	@MessageMapping("/process")
 	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<byte[]> process() throws Exception {
-		Image.setDefaultRenderer(serverImageRenderer);
-		serverImageRenderer.clearLastOutput();
-
+	public @ResponseBody ResponseEntity<String> process() throws Exception {
+		ProcessResult.clear();
 		modules.execute(cloudWorkspace.getWorkspace());
 
-		while (serverImageRenderer.getLastOutputImage() == null)
-			Thread.sleep(10);
-
 		return ResponseEntity.ok()
-				.contentType(MediaType.IMAGE_PNG)
-				.body(serverImageRenderer.getLastOutputImage());
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(ProcessResult.getResultJSON().toString());
 	}
+
+	// @MessageMapping("/getimage")
+	// @SendToUser("/queue/image")
+	// public @ResponseBody ResponseEntity<byte[]> getimage() throws Exception {
+	// 	return ResponseEntity.ok()
+	// 			.contentType(MediaType.IMAGE_PNG)
+	// 			.body(ProcessResult.getImage());
+	// }
 
 	@MessageMapping("/getparameters")
 	@SendToUser("/queue/parameters")
@@ -68,9 +72,6 @@ public class ProcessController {
 	@MessageMapping("/setparameter")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> setparameter(SetParameterRequest request) throws Exception {
-		Image.setDefaultRenderer(serverImageRenderer);
-		serverImageRenderer.clearLastOutput();
-
 		for (Module module : modules.values()) {
 			if (module.getModuleID().equals(request.getModuleID())) {
 				Parameter parameter = module.getParameter(request.getParameterName());
@@ -128,6 +129,16 @@ public class ProcessController {
 
 	}
 
+	@MessageMapping("/haspreviousgroup")
+	@SendToUser("/queue/parameters")
+	public @ResponseBody ResponseEntity<String> haspreviousgroup() throws Exception {
+		// Return the parameters for these modules
+		return ResponseEntity.ok()
+				.contentType(MediaType.TEXT_PLAIN)
+				.body(String.valueOf(moduleGroups.hasPreviousGroup()));
+
+	}
+
 	@MessageMapping("/nextgroup")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> nextgroup() throws Exception {
@@ -145,19 +156,24 @@ public class ProcessController {
 
 	}
 
+	@MessageMapping("/hasnextgroup")
+	@SendToUser("/queue/parameters")
+	public @ResponseBody ResponseEntity<String> hasnextgroup() throws Exception {
+		// Return the parameters for these modules
+		return ResponseEntity.ok()
+				.contentType(MediaType.TEXT_PLAIN)
+				.body(String.valueOf(moduleGroups.hasNextGroup()));
+
+	}
+
 	@MessageMapping("/processgroup")
 	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<byte[]> procesgroup() throws Exception {
-		Image.setDefaultRenderer(serverImageRenderer);
-		serverImageRenderer.clearLastOutput();
-
+	public @ResponseBody ResponseEntity<String> processgroup() throws Exception {
+		ProcessResult.clear();
 		moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
 
-		while (serverImageRenderer.getLastOutputImage() == null)
-			Thread.sleep(10);
-
 		return ResponseEntity.ok()
-				.contentType(MediaType.IMAGE_PNG)
-				.body(serverImageRenderer.getLastOutputImage());
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(ProcessResult.getResultJSON().toString());
 	}
 }

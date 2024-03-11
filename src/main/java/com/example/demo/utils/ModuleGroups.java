@@ -84,6 +84,10 @@ public class ModuleGroups extends TreeMap<Integer, ModuleGroup> {
         return get(groupIdx);
     }
 
+    public boolean hasPreviousGroup() {
+        return groupIdx != 0;
+    }
+
     public boolean previousGroup() {
         if (groupIdx == 0)
             return false;
@@ -92,6 +96,10 @@ public class ModuleGroups extends TreeMap<Integer, ModuleGroup> {
 
         return true;
 
+    }
+
+    public boolean hasNextGroup() {
+        return groupIdx != maxIdx;
     }
 
     public boolean nextGroup() {
