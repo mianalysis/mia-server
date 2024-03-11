@@ -5,6 +5,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import ij.IJ;
+import ij.ImagePlus;
 import ij.gui.Overlay;
 import ij.process.LUT;
 import io.github.mianalysis.mia.object.image.Image;
@@ -14,10 +16,20 @@ public class ServerImageRenderer implements ImageRenderer {
     private byte[] outputImage = null;
 
     @Override
-    public void render(Image image, String arg1, LUT arg2, boolean arg3, boolean arg4, Overlay arg5) {
+    public void render(Image image, String title, LUT lut, boolean normalise, boolean composite, Overlay overlay) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
-            ImageIO.write(image.getImagePlus().getBufferedImage(), "png", stream);
+            ImagePlus ipl = image.getImagePlus();
+
+            if (composite)
+                ipl.setDisplayMode(IJ.COMPOSITE);
+            else
+                ipl.setDisplayMode(IJ.COLOR);
+
+            if (ipl.getOverlay() != null)
+                ipl.flattenStack();
+
+            ImageIO.write(ipl.getBufferedImage(), "png", stream);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

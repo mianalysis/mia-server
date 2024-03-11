@@ -12,6 +12,7 @@ public class DemoApplication {
     }
 	
 	public static void main(String[] args) {
+		// AvailableModules.addModuleName(DisplayMessage.class);
 		SpringApplication.run(DemoApplication.class, args);
 	}
 }
