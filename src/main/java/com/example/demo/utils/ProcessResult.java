@@ -2,6 +2,7 @@ package com.example.demo.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 
 import javax.imageio.ImageIO;
 
@@ -50,8 +51,8 @@ public class ProcessResult {
             throw new RuntimeException(e);
         }
 
-        sun.misc.BASE64Encoder encoder= new sun.misc.BASE64Encoder();
-        return encoder.encode(stream.toByteArray());
+        
+        return Base64.getEncoder().encodeToString(stream.toByteArray());
 
     }
 }
