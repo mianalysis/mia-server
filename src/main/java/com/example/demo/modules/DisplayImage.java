@@ -30,6 +30,17 @@ public class DisplayImage extends Module {
 
     public static final String IMAGE = "Image to display";
 
+    public static final String TYPE = "Type";
+
+    public static final String SHOW_CHANNEL_TOGGLES = "Show channel toggles";
+
+    public interface Types {
+        String COLOUR = "Colour";
+        String COMPOSITE = "Composite";
+
+        String[] ALL = new String[] { COLOUR, COMPOSITE };
+    }
+
     public static void main(String[] args) {
         // The following must be called before initialising ImageJ
         LegacyInjector.preinit();

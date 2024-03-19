@@ -1,5 +1,6 @@
 package com.example.demo.utils;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -29,7 +30,9 @@ public class ServerImageRenderer implements ImageRenderer {
             if (ipl.getOverlay() != null)
                 ipl.flattenStack();
 
-            ImageIO.write(ipl.getBufferedImage(), "png", stream);
+            BufferedImage bufferedImage = ipl.getBufferedImage();
+            System.out.println(bufferedImage.getType()+"_"+bufferedImage.getColorModel());
+            ImageIO.write(bufferedImage, "png", stream);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
