@@ -19,7 +19,7 @@ public class CloudWorkspace {
 
   public CloudWorkspace() throws Exception {
     // String inputFilePath = "src/main/resources/mia/images/What is an image.tif";
-    String inputFilePath = "src/main/resources/mia/images/RGB_circles.png";
+    String inputFilePath = "src/main/resources/mia/images/What is an image.tif";
 
     Workspaces workspaces = new Workspaces();
 

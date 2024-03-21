@@ -16,6 +16,7 @@ import io.github.mianalysis.mia.object.image.Image;
 public class ProcessResult {
     public static String message = null;
     public static Image image = null;
+    public static boolean showImageControls = false;
 
     public static void clear() {
         message = null;
@@ -27,6 +28,7 @@ public class ProcessResult {
 
         json.put("message", message);
         json.put("image",getImage());
+        json.put("showimagecontrols", showImageControls);
 
         return json;
 
