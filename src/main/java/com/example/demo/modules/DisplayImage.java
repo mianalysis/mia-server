@@ -86,8 +86,8 @@ public class DisplayImage extends Module {
             e.printStackTrace();
         }
 
-        if (showOutput)
-            workspace.getImage(parameters.getValue(IMAGE, workspace)).show();
+        // if (showOutput)
+        //     workspace.getImage(parameters.getValue(IMAGE, workspace)).show();
         return Status.PASS;
 
     }
