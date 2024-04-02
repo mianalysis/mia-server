@@ -10,6 +10,7 @@ import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.parameters.BooleanP;
 import io.github.mianalysis.mia.object.parameters.InputImageP;
 import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
@@ -32,7 +33,7 @@ public class DisplayImage extends Module {
 
     public static final String TYPE = "Type";
 
-    public static final String SHOW_CHANNEL_TOGGLES = "Show channel toggles";
+    public static final String SHOW_CHANNEL_CONTROLS = "Show channel controls";
 
     public interface Types {
         String COLOUR = "Colour";
@@ -80,9 +81,13 @@ public class DisplayImage extends Module {
     public Status process(Workspace workspace) {
         try {
             ProcessResult.image = workspace.getImage(parameters.getValue(IMAGE, workspace));
+            ProcessResult.showImageControls = parameters.getValue(SHOW_CHANNEL_CONTROLS, workspace);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // if (showOutput)
+        //     workspace.getImage(parameters.getValue(IMAGE, workspace)).show();
         return Status.PASS;
 
     }
@@ -90,6 +95,7 @@ public class DisplayImage extends Module {
     @Override
     protected void initialiseParameters() {
         parameters.add(new InputImageP(IMAGE, this));
+        parameters.add(new BooleanP(SHOW_CHANNEL_CONTROLS, this, false));
     }
 
     @Override
