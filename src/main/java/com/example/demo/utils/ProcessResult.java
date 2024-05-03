@@ -33,7 +33,6 @@ public class ProcessResult {
 
         json.put("message", message);
         json.put("image", getImageJSON());
-        json.put("showimagecontrols", showImageControls);
 
         return json;
 
@@ -65,6 +64,7 @@ public class ProcessResult {
     public static JSONObject getImageJSON() throws InterruptedException {
         JSONObject imageJSON = new JSONObject();
         imageJSON.put("name",image.getName());
+        imageJSON.put("showcontrols", showImageControls);
 
         JSONArray channelArray = new JSONArray();
 
