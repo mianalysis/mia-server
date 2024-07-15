@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import com.example.demo.modules.AddPathsToMetadata;
 import com.example.demo.modules.DisplayImage;
 import com.example.demo.modules.DisplayMessage;
 
@@ -16,11 +17,12 @@ public class TestRun {
         new ij.ImageJ();
 
         // Launching MIA
-        new ImageJ().command().run("io.github.mianalysis.mia.MIAGUI", false);
+        new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
         // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(DisplayMessage.class);
+        AvailableModules.addModuleName(AddPathsToMetadata.class);
         AvailableModules.addModuleName(DisplayImage.class);
+        AvailableModules.addModuleName(DisplayMessage.class);
 
     }
 }

@@ -1,18 +1,28 @@
 package com.example.demo.utils;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Base64;
+import java.util.Collection;
 
+import javax.imageio.ImageIO;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.xml.sax.SAXException;
 
+import ij.IJ;
+import ij.ImagePlus;
+import ij.plugin.ChannelSplitter;
+import ij.process.ImageProcessor;
+import ij.process.LUT;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.OutputControl;
@@ -27,9 +37,9 @@ import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisTester;
 
 public class JSONWriter {
-private static GUISeparator loadSeparator;
+    private static GUISeparator loadSeparator;
 
-        public static void main(String[] args)
+    public static void main(String[] args)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException,
             InvocationTargetException, IOException, ParserConfigurationException, SAXException {
         String workflowPath = "src/main/resources/mia/What is an imageQ$.mia";
@@ -43,13 +53,53 @@ private static GUISeparator loadSeparator;
 
     }
 
+    public static JSONObject getWorkflowsJSON(Collection<File> workflows) {
+        JSONObject json = new JSONObject();
+
+        JSONArray jsonArray = new JSONArray();
+
+        for (File workflowFile : workflows)
+            jsonArray.put(getWorkflowJSON(workflowFile));
+
+        json.put("workflows", jsonArray);
+
+        return json;
+
+    }
+
+    public static JSONObject getWorkflowJSON(File workflowFile) {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("name", workflowFile.getName());
+        jsonObject.put("thumbnail", getThumbnailPNGString(workflowFile));
+
+        return jsonObject;
+
+    }
+
+    public static String getThumbnailPNGString(File workflowFile) {
+        String thumbnailName = workflowFile.getParentFile().getParent() + "/thumbnails/" + FilenameUtils.getBaseName(workflowFile.getName()) + ".png";
+        ImagePlus ipl = IJ.openImage(thumbnailName);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try {
+            // ipr.setLut(LUT.createLutFromColor(Color.WHITE));
+            ImageIO.write(ipl.getBufferedImage(), "png", stream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return "data:image/png;base64,"+Base64.getEncoder().encodeToString(stream.toByteArray());
+
+    }
+
     public static JSONObject getModulesJSON(Modules modules, Workspace workspace) {
         loadSeparator = new GUISeparator(modules);
-        JSONObject json = new JSONObject();        
+        JSONObject json = new JSONObject();
 
         AnalysisTester.testModule(modules.getInputControl(), modules);
         AnalysisTester.testModule(modules.getOutputControl(), modules);
-        AnalysisTester.testModules(modules, workspace);
+        AnalysisTester.testModules(modules, workspace, null);
 
         // Check if there are no controls to be displayed
         if (!modules.hasVisibleParameters())
@@ -91,7 +141,7 @@ private static GUISeparator loadSeparator;
                 jsonArray.put(getModuleJSON(module));
 
             } else {
-                if (separator.isEnabled() && module.isRunnable() || module.invalidParameterIsVisible() )
+                if (separator.isEnabled() && module.isRunnable() || module.invalidParameterIsVisible())
                     if (module.hasVisibleParameters() || module.canBeDisabled())
                         jsonArray.put(getModuleJSON(module));
 
@@ -149,21 +199,21 @@ private static GUISeparator loadSeparator;
 
         if (parameter instanceof ChoiceType) {
             JSONArray choices = new JSONArray();
-            for (String choice:((ChoiceType) parameter).getChoices())
+            for (String choice : ((ChoiceType) parameter).getChoices())
                 choices.put(choice);
-            
+
             jsonObject.put("choices", choices);
-            
+
         }
 
         if (parameter instanceof ParameterGroup) {
             JSONArray jsonArrayCollections = new JSONArray();
-            for (Parameters collection:((ParameterGroup) parameter).getCollections(true).values()) {
+            for (Parameters collection : ((ParameterGroup) parameter).getCollections(true).values()) {
                 JSONArray jsonArrayParameters = getParameters(collection);
-                for (Object jsonObjectParameters:jsonArrayParameters)
+                for (Object jsonObjectParameters : jsonArrayParameters)
                     jsonArrayCollections.put(jsonObjectParameters);
             }
-            
+
             jsonObject.put("collections", jsonArrayCollections);
 
         }

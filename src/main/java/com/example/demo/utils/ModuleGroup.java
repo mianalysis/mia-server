@@ -51,7 +51,7 @@ public class ModuleGroup {
     }
 
     public boolean execute(Modules modules, Workspace workspace) {
-        AnalysisTester.testModules(modules, workspace);
+        AnalysisTester.testModules(modules, workspace, null);
 
         for (int idx = startIdx; idx < endIdx; idx++) {
             Module module = modules.get(idx);

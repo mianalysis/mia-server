@@ -23,6 +23,7 @@ import io.github.mianalysis.mia.object.parameters.text.TextAreaP;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
+import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
 import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
@@ -47,7 +48,7 @@ public class DisplayMessage extends Module {
         new ij.ImageJ();
 
         // Launching MIA
-        new ImageJ().command().run("io.github.mianalysis.mia.MIAGUI", false);
+        new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
         // Adding the current module to MIA's list of available modules.
         AvailableModules.addModuleName(DisplayMessage.class);
@@ -121,7 +122,11 @@ public class DisplayMessage extends Module {
     @Override
     public ObjMeasurementRefs updateAndGetObjectMeasurementRefs() {
         return null;
+    }
 
+    @Override
+    public ObjMetadataRefs updateAndGetObjectMetadataRefs() {
+        return null;
     }
 
     @Override
@@ -132,7 +137,6 @@ public class DisplayMessage extends Module {
     @Override
     public ParentChildRefs updateAndGetParentChildRefs() {
         return null;
-
     }
 
     @Override

@@ -1,9 +1,9 @@
 package com.example.demo.controllers;
 
-import javax.annotation.Resource;
+import java.io.File;
+import java.util.Collection;
 
-import org.jfree.data.json.impl.JSONArray;
-import org.jfree.data.json.impl.JSONObject;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,26 +14,66 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.demo.beans.CloudWorkspace;
 import com.example.demo.requests.SetParameterRequest;
+import com.example.demo.requests.SetWorkflowRequest;
 import com.example.demo.utils.JSONWriter;
 import com.example.demo.utils.ModuleGroups;
 import com.example.demo.utils.ProcessResult;
-import com.example.demo.utils.ServerImageRenderer;
 
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.object.image.Image;
+import io.github.mianalysis.mia.module.core.InputControl;
+import io.github.mianalysis.mia.module.system.GlobalVariables;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
+import io.github.mianalysis.mia.object.parameters.text.StringP;
+import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 
 @Controller
 public class ProcessController {
 	@Autowired
 	private CloudWorkspace cloudWorkspace;
 
-	@Resource(name = "getModules")
-	Modules modules;
+	// @Resource(name = "getModules")
+	private Modules modules;
 
 	// Optional
 	private ModuleGroups moduleGroups;
+
+	@MessageMapping("/getworkflows")
+	@SendToUser("/queue/workflows")
+	public @ResponseBody ResponseEntity<String> getWorkflows() throws Exception {
+		String workflowsPath = "src/main/resources/mia/workflows/";
+        Collection<File> workflowFiles = FileUtils.listFiles(new File(workflowsPath), new String[]{"mia"}, false);
+
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(JSONWriter.getWorkflowsJSON(workflowFiles).toString());
+
+	}
+
+	@MessageMapping("/setworkflow")
+	@SendToUser("/queue/parameters")
+	public @ResponseBody ResponseEntity<String> setworkflow(SetWorkflowRequest request) throws Exception {
+		String workflowPath = "src/main/resources/mia/workflows/"+request.getWorkflowName();
+        modules = AnalysisReader.loadModules(new File(workflowPath));
+		modules.setAnalysisFilename(workflowPath);
+
+		GlobalVariables.updateVariables(modules);
+		String inputPath = modules.getInputControl().getParameterValue(InputControl.INPUT_PATH, null);
+		cloudWorkspace.initialiseWorkspace(inputPath);
+
+		enablemodulegroups();
+		
+		if (moduleGroups == null)
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()).toString());
+		else
+			return ResponseEntity.ok()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
+							cloudWorkspace.getWorkspace()).toString());
+
+	}
 
 	@MessageMapping("/process")
 	@SendToUser("/queue/result")

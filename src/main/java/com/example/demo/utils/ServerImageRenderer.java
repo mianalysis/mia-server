@@ -31,7 +31,6 @@ public class ServerImageRenderer implements ImageRenderer {
                 ipl.flattenStack();
 
             BufferedImage bufferedImage = ipl.getBufferedImage();
-            System.out.println(bufferedImage.getType()+"_"+bufferedImage.getColorModel());
             ImageIO.write(bufferedImage, "png", stream);
         } catch (IOException e) {
             throw new RuntimeException(e);

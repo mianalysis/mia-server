@@ -41,10 +41,9 @@ public class ProcessResult {
     public static String getImage() throws InterruptedException {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
-            while (image == null) {
-                System.out.print("WAITING");
+            while (image == null)
                 Thread.sleep(10);
-            }
+            
             ImagePlus ipl = image.getImagePlus();
 
             ipl.setDisplayMode(IJ.COMPOSITE);

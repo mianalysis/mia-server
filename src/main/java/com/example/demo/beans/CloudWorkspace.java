@@ -15,16 +15,21 @@ import io.github.mianalysis.mia.object.Workspaces;
 @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class CloudWorkspace {
 
-  private final Workspace workspace;
+  private Workspace workspace = null;
 
-  public CloudWorkspace() throws Exception {
-    String inputFilePath = "src/main/resources/mia/images/What is an image_RGB.tif";
-    // String inputFilePath = "src/main/resources/mia/images/SmallRGB.tif";
+  // public CloudWorkspace() throws Exception {
+  //   String inputFilePath = "src/main/resources/mia/images/What is an image_RGB.tif";
+  //   // String inputFilePath = "src/main/resources/mia/images/SmallRGB.tif";
 
-    Workspaces workspaces = new Workspaces();
+  //   Workspaces workspaces = new Workspaces();
 
-    workspace = workspaces.getNewWorkspace(new File(inputFilePath), 1);
+  //   workspace = workspaces.getNewWorkspace(new File(inputFilePath), 1);
     
+  // }
+
+  public void initialiseWorkspace(String inputPath) {
+    Workspaces workspaces = new Workspaces();
+    workspace = workspaces.getNewWorkspace(new File(inputPath), 1);
   }
 
   public Workspace getWorkspace() {

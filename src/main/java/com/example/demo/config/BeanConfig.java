@@ -1,24 +1,27 @@
-package com.example.demo.config;
+// package com.example.demo.config;
 
-import java.io.File;
+// import java.io.File;
+// import java.io.FileFilter;
+// import java.util.Collection;
 
-import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
+// import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
+// import io.github.mianalysis.mia.module.Modules;
+// import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 
-@Configuration
-public class BeanConfig {
+// import org.springframework.context.annotation.Configuration;
+// import org.springframework.context.annotation.Bean;
+// import org.springframework.context.annotation.Scope;
+// import org.springframework.context.annotation.ScopedProxyMode;
 
-    @Bean
-    @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public Modules getModules() throws Exception {
-        String workflowPath = "src/main/resources/mia/TestingChannelControls.mia";
-        
-        return AnalysisReader.loadModules(new File(workflowPath));
+// @Configuration
+// public class BeanConfig {
+//     @Bean
+//     @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
+//     public Modules getModules(String workflowName) throws Exception {
+//         String workflowPath = "src/main/resources/mia/workflows/"+workflowName;
 
-    }
-}
+//         return AnalysisReader.loadModules(new File(workflowPath));
+
+//     }
+// }
