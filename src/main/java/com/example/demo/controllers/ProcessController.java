@@ -12,6 +12,8 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.example.demo.beans.CloudModuleGroups;
+import com.example.demo.beans.CloudModules;
 import com.example.demo.beans.CloudWorkspace;
 import com.example.demo.requests.SetParameterRequest;
 import com.example.demo.requests.SetWorkflowRequest;
@@ -23,61 +25,68 @@ import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.InputControl;
 import io.github.mianalysis.mia.module.system.GlobalVariables;
+import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
-import io.github.mianalysis.mia.object.parameters.text.StringP;
-import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 
 @Controller
 public class ProcessController {
 	@Autowired
 	private CloudWorkspace cloudWorkspace;
 
-	// @Resource(name = "getModules")
-	private Modules modules;
+	@Autowired
+	private CloudModules cloudModules;
 
-	// Optional
-	private ModuleGroups moduleGroups;
+	@Autowired
+	private CloudModuleGroups cloudModuleGroups;
+
+	// @Resource(name = "getModules")
+	// private Modules modules;
 
 	@MessageMapping("/getworkflows")
 	@SendToUser("/queue/workflows")
 	public @ResponseBody ResponseEntity<String> getWorkflows() throws Exception {
 		String workflowsPath = "src/main/resources/mia/workflows/";
-        Collection<File> workflowFiles = FileUtils.listFiles(new File(workflowsPath), new String[]{"mia"}, false);
+		Collection<File> workflowFiles = FileUtils.listFiles(new File(workflowsPath), new String[] { "mia" }, false);
 
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(JSONWriter.getWorkflowsJSON(workflowFiles).toString());
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(JSONWriter.getWorkflowsJSON(workflowFiles).toString());
 
 	}
 
 	@MessageMapping("/setworkflow")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> setworkflow(SetWorkflowRequest request) throws Exception {
-		String workflowPath = "src/main/resources/mia/workflows/"+request.getWorkflowName();
-        modules = AnalysisReader.loadModules(new File(workflowPath));
+		String workflowPath = "src/main/resources/mia/workflows/" + request.getWorkflowName() + ".mia";
+		Modules modules = cloudModules.initialiseModules(workflowPath);
 		modules.setAnalysisFilename(workflowPath);
-
 		GlobalVariables.updateVariables(modules);
-		String inputPath = modules.getInputControl().getParameterValue(InputControl.INPUT_PATH, null);
-		cloudWorkspace.initialiseWorkspace(inputPath);
 
-		enablemodulegroups();
-		
-		if (moduleGroups == null)
+		String inputPath = modules.getInputControl().getParameterValue(InputControl.INPUT_PATH, null);
+		Workspace workspace = cloudWorkspace.initialiseWorkspace(inputPath);
+
+		ModuleGroups moduleGroups = cloudModuleGroups.initialiseModuleGroups(modules);
+
+		if (moduleGroups == null) {
 			return ResponseEntity.ok()
 					.contentType(MediaType.APPLICATION_JSON)
 					.body(JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()).toString());
-		else
+		} else {
+			if (moduleGroups.hasPreprocessingGroup())
+				moduleGroups.getPreprocessingGroup().execute(modules, workspace);
+
 			return ResponseEntity.ok()
 					.contentType(MediaType.APPLICATION_JSON)
 					.body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
 							cloudWorkspace.getWorkspace()).toString());
-
+		}
 	}
 
 	@MessageMapping("/process")
 	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> process() throws Exception {
+		Modules modules = cloudModules.getModules();
+
 		ProcessResult.clear();
 		modules.execute(cloudWorkspace.getWorkspace());
 
@@ -89,14 +98,17 @@ public class ProcessController {
 	// @MessageMapping("/getimage")
 	// @SendToUser("/queue/image")
 	// public @ResponseBody ResponseEntity<byte[]> getimage() throws Exception {
-	// 	return ResponseEntity.ok()
-	// 			.contentType(MediaType.IMAGE_PNG)
-	// 			.body(ProcessResult.getImage());
+	// return ResponseEntity.ok()
+	// .contentType(MediaType.IMAGE_PNG)
+	// .body(ProcessResult.getImage());
 	// }
 
 	@MessageMapping("/getparameters")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> getparameters() throws Exception {
+		Modules modules = cloudModules.getModules();
+		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
 		if (moduleGroups == null)
 			return ResponseEntity.ok()
 					.contentType(MediaType.APPLICATION_JSON)
@@ -112,6 +124,12 @@ public class ProcessController {
 	@MessageMapping("/setparameter")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> setparameter(SetParameterRequest request) throws Exception {
+		Modules modules = cloudModules.getModules();
+		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
+		System.out.println("Module hash " + modules.hashCode());
+		System.out.println("Module group hash " + moduleGroups.hashCode());
+
 		for (Module module : modules.values()) {
 			if (module.getModuleID().equals(request.getModuleID())) {
 				Parameter parameter = module.getParameter(request.getParameterName());
@@ -135,6 +153,9 @@ public class ProcessController {
 	@MessageMapping("/enablemodulegroups")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> enablemodulegroups() throws Exception {
+		Modules modules = cloudModules.getModules();
+		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
 		moduleGroups = new ModuleGroups(modules);
 
 		// If pre-processing modules are present, run these first (these are modules
@@ -155,6 +176,9 @@ public class ProcessController {
 	@MessageMapping("/previousgroup")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> previousgroup() throws Exception {
+		Modules modules = cloudModules.getModules();
+		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
 		// Move to the previous module group. If not possible, it will return the same
 		// set of modules
 		moduleGroups.previousGroup();
@@ -172,6 +196,8 @@ public class ProcessController {
 	@MessageMapping("/haspreviousgroup")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> haspreviousgroup() throws Exception {
+		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
 		// Return the parameters for these modules
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_PLAIN)
@@ -182,6 +208,9 @@ public class ProcessController {
 	@MessageMapping("/nextgroup")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> nextgroup() throws Exception {
+		Modules modules = cloudModules.getModules();
+		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
 		// Move to the next module group. If not possible, it will return the same set
 		// of modules
 		moduleGroups.nextGroup();
@@ -199,6 +228,8 @@ public class ProcessController {
 	@MessageMapping("/hasnextgroup")
 	@SendToUser("/queue/parameters")
 	public @ResponseBody ResponseEntity<String> hasnextgroup() throws Exception {
+		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
 		// Return the parameters for these modules
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_PLAIN)
@@ -209,6 +240,9 @@ public class ProcessController {
 	@MessageMapping("/processgroup")
 	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> processgroup() throws Exception {
+		Modules modules = cloudModules.getModules();
+		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
 		ProcessResult.clear();
 		moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
 

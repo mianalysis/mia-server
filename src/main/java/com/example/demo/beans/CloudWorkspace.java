@@ -17,19 +17,12 @@ public class CloudWorkspace {
 
   private Workspace workspace = null;
 
-  // public CloudWorkspace() throws Exception {
-  //   String inputFilePath = "src/main/resources/mia/images/What is an image_RGB.tif";
-  //   // String inputFilePath = "src/main/resources/mia/images/SmallRGB.tif";
-
-  //   Workspaces workspaces = new Workspaces();
-
-  //   workspace = workspaces.getNewWorkspace(new File(inputFilePath), 1);
-    
-  // }
-
-  public void initialiseWorkspace(String inputPath) {
+  public Workspace initialiseWorkspace(String inputPath) {
     Workspaces workspaces = new Workspaces();
     workspace = workspaces.getNewWorkspace(new File(inputPath), 1);
+
+    return workspace;
+
   }
 
   public Workspace getWorkspace() {
@@ -47,5 +40,5 @@ public class CloudWorkspace {
     // Invoked when the WebSocket session ends
     System.out.println("Destroying CloudWorkspace");
   }
-  
+
 }

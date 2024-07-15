@@ -107,6 +107,39 @@ public class ProcessResult {
 
         imageJSON.put("channels",channelArray);
 
+        if (ipl.getOverlay() != null) {
+            ImagePlus blankIpl = IJ.createImage("Overlay", ipl.getWidth(), ipl.getHeight(), 1, 8);
+            blankIpl.setOverlay(ipl.getOverlay().duplicate());
+            ImagePlus overlayIpl = blankIpl.flatten();
+
+            JSONObject channelObject = new JSONObject();
+
+            // Adding pixel information
+            ImageProcessor ipr = overlayIpl.getProcessor();
+            channelObject.put("pixels", getChannelString(ipr));
+
+            // Adding LUT information
+            LUT lut = ipl.getLuts()[0];
+
+            byte[] reds = new byte[256];
+            lut.getReds(reds);
+            channelObject.put("red", reds[255] & 0xFF);
+
+            byte[] greens = new byte[256];
+            lut.getGreens(greens);
+            channelObject.put("green", greens[255] & 0xFF);
+
+            byte[] blues = new byte[256];
+            lut.getBlues(blues);
+            channelObject.put("blue", blues[255] & 0xFF);
+
+            channelObject.put("strength",1);
+            channelObject.put("index",channels.length);
+
+            channelArray.put(channelObject);
+
+        }
+
         return imageJSON;
 
     }

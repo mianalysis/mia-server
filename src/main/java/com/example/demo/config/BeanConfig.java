@@ -18,10 +18,11 @@
 // public class BeanConfig {
 //     @Bean
 //     @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
-//     public Modules getModules(String workflowName) throws Exception {
-//         String workflowPath = "src/main/resources/mia/workflows/"+workflowName;
+//     public Modules getModules() throws Exception {
+//         return null;
+//         // String workflowPath = "src/main/resources/mia/workflows/"+workflowName;
 
-//         return AnalysisReader.loadModules(new File(workflowPath));
+//         // return AnalysisReader.loadModules(new File(workflowPath));
 
 //     }
 // }

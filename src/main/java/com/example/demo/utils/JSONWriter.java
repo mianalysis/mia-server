@@ -20,9 +20,6 @@ import org.xml.sax.SAXException;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.plugin.ChannelSplitter;
-import ij.process.ImageProcessor;
-import ij.process.LUT;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.OutputControl;
@@ -70,7 +67,15 @@ public class JSONWriter {
     public static JSONObject getWorkflowJSON(File workflowFile) {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("name", workflowFile.getName());
+        String fullName = workflowFile.getName();
+        if (fullName.endsWith(".mia"))
+            fullName = fullName.replace(".mia", "");
+        jsonObject.put("fullname", fullName);
+
+        String displayName = workflowFile.getName().replace("$Q", "?").replace("_", " ");
+        if (displayName.endsWith(".mia"))
+            displayName = displayName.replace(".mia", "");
+        jsonObject.put("displayname", displayName);
         jsonObject.put("thumbnail", getThumbnailPNGString(workflowFile));
 
         return jsonObject;
@@ -78,7 +83,8 @@ public class JSONWriter {
     }
 
     public static String getThumbnailPNGString(File workflowFile) {
-        String thumbnailName = workflowFile.getParentFile().getParent() + "/thumbnails/" + FilenameUtils.getBaseName(workflowFile.getName()) + ".png";
+        String thumbnailName = workflowFile.getParentFile().getParent() + "/thumbnails/"
+                + FilenameUtils.getBaseName(workflowFile.getName()) + ".png";
         ImagePlus ipl = IJ.openImage(thumbnailName);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -89,7 +95,7 @@ public class JSONWriter {
             throw new RuntimeException(e);
         }
 
-        return "data:image/png;base64,"+Base64.getEncoder().encodeToString(stream.toByteArray());
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(stream.toByteArray());
 
     }
 
