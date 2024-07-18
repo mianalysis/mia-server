@@ -194,14 +194,17 @@ public class ProcessController {
 	}
 
 	@MessageMapping("/haspreviousgroup")
-	@SendToUser("/queue/parameters")
+	@SendToUser("/queue/previousstatus")
 	public @ResponseBody ResponseEntity<String> haspreviousgroup() throws Exception {
+		System.out.println("Rec");
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
+		String bodyString = moduleGroups != null ? String.valueOf(moduleGroups.hasPreviousGroup()) : "";
+		
 		// Return the parameters for these modules
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_PLAIN)
-				.body(String.valueOf(moduleGroups.hasPreviousGroup()));
+				.body(bodyString);
 
 	}
 
@@ -226,14 +229,16 @@ public class ProcessController {
 	}
 
 	@MessageMapping("/hasnextgroup")
-	@SendToUser("/queue/parameters")
+	@SendToUser("/queue/nextstatus")
 	public @ResponseBody ResponseEntity<String> hasnextgroup() throws Exception {
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
+		String bodyString = moduleGroups != null ? String.valueOf(moduleGroups.hasNextGroup()) : "";
 
 		// Return the parameters for these modules
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_PLAIN)
-				.body(String.valueOf(moduleGroups.hasNextGroup()));
+				.body(bodyString);
 
 	}
 
