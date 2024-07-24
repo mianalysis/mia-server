@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 
 import javax.imageio.ImageIO;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,6 +18,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.xml.sax.SAXException;
+
+import com.drew.lang.annotations.Nullable;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -30,25 +33,10 @@ import io.github.mianalysis.mia.object.parameters.ParameterGroup;
 import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.parameters.abstrakt.ChoiceType;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
-import io.github.mianalysis.mia.process.analysishandling.AnalysisReader;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisTester;
 
 public class JSONWriter {
     private static GUISeparator loadSeparator;
-
-    public static void main(String[] args)
-            throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException,
-            InvocationTargetException, IOException, ParserConfigurationException, SAXException {
-        String workflowPath = "src/main/resources/mia/What is an imageQ$.mia";
-        Modules modules = AnalysisReader.loadModules(new File(workflowPath));
-
-        JSONObject json = getModulesJSON(modules, null);
-
-        BufferedWriter writer = Files.newBufferedWriter(Paths.get("src/main/resources/mia/Ex1.json"));
-        json.write(writer);
-        writer.close();
-
-    }
 
     public static JSONObject getWorkflowsJSON(Collection<File> workflows) {
         JSONObject json = new JSONObject();
@@ -174,7 +162,7 @@ public class JSONWriter {
         jsonObject.put("enabled", module.isEnabled());
         jsonObject.put("visibleTitle", module.canShowProcessingTitle());
 
-        JSONArray jsonArray = getParameters(module.updateAndGetParameters());
+        JSONArray jsonArray = getParameters(module.updateAndGetParameters(), null, null);
         jsonObject.put("parameters", jsonArray);
 
         if (module instanceof GUISeparator)
@@ -184,17 +172,19 @@ public class JSONWriter {
 
     }
 
-    public static JSONArray getParameters(Parameters parameters) {
+    public static JSONArray getParameters(Parameters parameters, @Nullable Parameter parentGroup,
+            @Nullable Integer groupCollectionNumber) {
         JSONArray jsonArray = new JSONArray();
         for (Parameter parameter : parameters.values())
             if (parameter.isVisible() || parameter instanceof ParameterGroup)
-                jsonArray.put(getParameterJSON(parameter));
+                jsonArray.put(getParameterJSON(parameter, parentGroup, groupCollectionNumber));
 
         return jsonArray;
 
     }
 
-    public static JSONObject getParameterJSON(Parameter parameter) {
+    public static JSONObject getParameterJSON(Parameter parameter, @Nullable Parameter parentGroup,
+            @Nullable Integer groupCollectionNumber) {
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("name", parameter.getName());
@@ -202,6 +192,13 @@ public class JSONWriter {
         jsonObject.put("value", parameter.getRawStringValue());
         jsonObject.put("type", parameter.getClass().getSimpleName());
         jsonObject.put("visible", parameter.isVisible());
+        if (parentGroup == null) {
+            jsonObject.put("parentGroupName", "");
+            jsonObject.put("groupCollectionNumber", 0);
+        } else {
+            jsonObject.put("parentGroupName", parentGroup.getName());
+            jsonObject.put("groupCollectionNumber", groupCollectionNumber);
+        }
 
         if (parameter instanceof ChoiceType) {
             JSONArray choices = new JSONArray();
@@ -214,8 +211,10 @@ public class JSONWriter {
 
         if (parameter instanceof ParameterGroup) {
             JSONArray jsonArrayCollections = new JSONArray();
-            for (Parameters collection : ((ParameterGroup) parameter).getCollections(true).values()) {
-                JSONArray jsonArrayParameters = getParameters(collection);
+            LinkedHashMap<Integer, Parameters> collections = ((ParameterGroup) parameter).getCollections(true);
+            for (int collectionNumber : collections.keySet()) {
+                Parameters collection = collections.get(collectionNumber);
+                JSONArray jsonArrayParameters = getParameters(collection, parameter, collectionNumber);
                 for (Object jsonObjectParameters : jsonArrayParameters)
                     jsonArrayCollections.put(jsonObjectParameters);
             }

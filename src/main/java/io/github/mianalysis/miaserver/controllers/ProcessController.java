@@ -26,6 +26,7 @@ import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.InputControl;
 import io.github.mianalysis.mia.module.system.GlobalVariables;
 import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.parameters.ParameterGroup;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 
 @Controller
@@ -129,8 +130,15 @@ public class ProcessController {
 
 		for (Module module : modules.values()) {
 			if (module.getModuleID().equals(request.getModuleID())) {
-				Parameter parameter = module.getParameter(request.getParameterName());
-				parameter.setValueFromString(request.getParameterValue());
+				if (request.getParentGroupName() == null || request.getParentGroupName().equals("")) {
+					Parameter parameter = module.getParameter(request.getParameterName());
+					parameter.setValueFromString(request.getParameterValue());
+				} else {
+					ParameterGroup parentGroup = module.getParameter(request.getParentGroupName());
+					Parameter parameter = parentGroup.getCollections(true).get(request.getGroupCollectionNumber()).getParameter(request.getParameterName());
+					parameter.setValueFromString(request.getParameterValue());
+				}
+				
 				break;
 			}
 		}
