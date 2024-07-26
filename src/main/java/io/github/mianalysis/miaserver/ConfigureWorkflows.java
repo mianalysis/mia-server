@@ -8,7 +8,7 @@ import io.github.mianalysis.miaserver.modules.DisplayMessage;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
-public class TestRun {
+public class ConfigureWorkflows {
     public static void main(String[] args) {
         // The following must be called before initialising ImageJ
         LegacyInjector.preinit();

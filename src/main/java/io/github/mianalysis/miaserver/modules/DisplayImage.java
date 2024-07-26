@@ -11,9 +11,6 @@ import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
-import io.github.mianalysis.miaserver.results.Result;
-import io.github.mianalysis.miaserver.utils.ProcessResult;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.ChannelSplitter;
@@ -35,12 +32,13 @@ import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
 import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
+import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
-public class DisplayImage extends Module implements Result {
+public class DisplayImage extends Module {
 
     public static final String IMAGE = "Image to display";
 
@@ -250,11 +248,5 @@ public class DisplayImage extends Module implements Result {
     @Override
     public boolean verify() {
         return true;
-    }
-
-    @Override
-    public JSONObject getJSON() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getJSON'");
     }
 }

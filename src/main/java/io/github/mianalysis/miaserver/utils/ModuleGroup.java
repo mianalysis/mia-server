@@ -69,7 +69,7 @@ public class ModuleGroup {
                     switch (success) {
                         case REDIRECT:
                             // Getting index of module before one to move to
-                            Module redirectModule = module.getRedirectModule(workspace);
+                            Module redirectModule = modules.getModuleByID(module.getRedirectModuleID(workspace));
                             idx = modules.indexOf(redirectModule) - 1;
                             break;
                         case PASS:
