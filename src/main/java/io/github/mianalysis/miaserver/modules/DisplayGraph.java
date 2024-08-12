@@ -18,6 +18,8 @@ import io.github.mianalysis.mia.object.parameters.ChoiceP;
 import io.github.mianalysis.mia.object.parameters.InputObjectsP;
 import io.github.mianalysis.mia.object.parameters.ObjectMeasurementP;
 import io.github.mianalysis.mia.object.parameters.Parameters;
+import io.github.mianalysis.mia.object.parameters.text.DoubleP;
+import io.github.mianalysis.mia.object.parameters.text.IntegerP;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
@@ -34,6 +36,9 @@ public class DisplayGraph extends Module {
     public static final String GRAPH_SOURCE = "Graph source";
     public static final String INPUT_OBJECTS = "Input objects";
     public static final String OBJECT_MEASUREMENT = "Object measurement";
+    public static final String RANGE_MINIMUM = "Range minimum";
+    public static final String RANGE_MAXIMUM = "Range maximum";
+    public static final String NUMBER_OF_BINS = "Number of bins";
     public static final String GRAPH_TYPE = "Graph type";
     public static final String SHOW_DATA_LABELS = "Show data labels";
 
@@ -41,8 +46,10 @@ public class DisplayGraph extends Module {
         String CHANNEL_COMPONENTS = "Channel components";
         String IMAGE_INTENSITY_HISTOGRAM = "Image intensity histogram";
         String OBJECT_MEASUREMENTS = "Object measurements";
+        String OBJECT_MEASUREMENT_HISTOGRAM = "Object measurement histogram";
 
-        String[] ALL = new String[] { CHANNEL_COMPONENTS, IMAGE_INTENSITY_HISTOGRAM, OBJECT_MEASUREMENTS };
+        String[] ALL = new String[] { CHANNEL_COMPONENTS, IMAGE_INTENSITY_HISTOGRAM, OBJECT_MEASUREMENTS,
+                OBJECT_MEASUREMENT_HISTOGRAM };
 
     }
 
@@ -92,7 +99,7 @@ public class DisplayGraph extends Module {
 
     public JSONObject getChannelComponentsJSON() {
         JSONObject graphJSON = new JSONObject();
-        graphJSON.put("source", GraphSources.CHANNEL_COMPONENTS);        
+        graphJSON.put("source", GraphSources.CHANNEL_COMPONENTS);
 
         return graphJSON;
 
@@ -131,18 +138,6 @@ public class DisplayGraph extends Module {
 
     }
 
-    protected String[] getObjectNames(Objs objs) {
-        String[] names = new String[objs.size()];
-
-        String rootName = objs.getName();
-        int i = 0;
-        for (Obj obj : objs.values())
-            names[i++] = rootName + " " + obj.getID();
-
-        return names;
-
-    }
-
     protected JSONObject getObjectMeasurementDatasetJSON(Objs objs, String measurementName) {
         JSONObject datasetJSON = new JSONObject();
 
@@ -165,11 +160,112 @@ public class DisplayGraph extends Module {
 
     }
 
+    protected String[] getObjectNames(Objs objs) {
+        String[] names = new String[objs.size()];
+
+        String rootName = objs.getName();
+        int i = 0;
+        for (Obj obj : objs.values())
+            names[i++] = rootName + " " + obj.getID();
+
+        return names;
+
+    }
+
+    public JSONObject getObjectMeasurementHistogramJSON(Objs objs, String[] measurementsName, double rangeMin,
+            double rangeMax, int nBins) {
+        JSONObject graphJSON = new JSONObject();
+
+        graphJSON.put("source", GraphSources.OBJECT_MEASUREMENT_HISTOGRAM);
+        graphJSON.put("data", getObjectMeasurementHistogramDataJSON(objs, measurementsName, rangeMin, rangeMax, nBins));
+
+        return graphJSON;
+
+    }
+
+    protected JSONObject getObjectMeasurementHistogramDataJSON(Objs objs, String[] measurementsName, double rangeMin,
+            double rangeMax, int nBins) {
+        JSONObject dataJSON = new JSONObject();
+        double[] binCentres = getBinCentres(rangeMin, rangeMax, nBins);
+        
+        dataJSON.put("labels", binCentres);
+
+        JSONArray datasetJSON = new JSONArray();
+        for (String measurementName : measurementsName)
+            datasetJSON.add(getObjectMeasurementHistogramDatasetJSON(objs, measurementName, binCentres));
+
+        dataJSON.put("datasets", datasetJSON);
+
+        return dataJSON;
+
+    }
+
+    protected JSONObject getObjectMeasurementHistogramDatasetJSON(Objs objs, String measurementName,
+            double[] binCentres) {
+        JSONObject datasetJSON = new JSONObject();
+
+        double[] data = new double[objs.size()];
+        String[] backgroundColor = new String[objs.size()];
+
+        int i = 0;
+        for (Obj obj : objs.values()) {
+            Measurement measurement = obj.getMeasurement(measurementName);
+            if (measurement == null) {
+                data[i] = Double.NaN;
+            } else {
+                double value = measurement.getValue();
+                int closestIdx = getClosestBinIndex(value, binCentres);
+                data[closestIdx]++;
+            }
+
+            backgroundColor[i++] = "red";
+
+        }
+
+        datasetJSON.put("label", measurementName);
+        datasetJSON.put("borderWidth", 1);
+        datasetJSON.put("data", data);
+        datasetJSON.put("backgroundColor", backgroundColor);
+
+        return datasetJSON;
+
+    }
+
+    protected double[] getBinCentres(double rangeMin, double rangeMax, int nBins) {
+        double[] names = new double[nBins];
+
+        double increment = (rangeMax - rangeMin) / nBins;
+        for (int i = 0; i < nBins; i++)
+            names[i] = rangeMin + (i * increment) + increment / 2;
+
+        return names;
+
+    }
+
+    protected int getClosestBinIndex(double value, double[] binCentres) {
+        int closestIdx = -1;
+        double closestDist = Double.MAX_VALUE;
+
+        for (int idx = 0; idx < binCentres.length; idx++) {
+            double binCentre = binCentres[idx];
+            if (Math.abs(binCentre - value) < closestDist) {
+                closestDist = Math.abs(binCentre - value);
+                closestIdx = idx;
+            }
+        }
+
+        return closestIdx;
+
+    }
+
     @Override
     public Status process(Workspace workspace) {
         String graphSource = parameters.getValue(GRAPH_SOURCE, workspace);
         String inputObjectsName = parameters.getValue(INPUT_OBJECTS, workspace);
         String objectMeasurementName = parameters.getValue(OBJECT_MEASUREMENT, workspace);
+        double rangeMin = parameters.getValue(RANGE_MINIMUM, workspace);
+        double rangeMax = parameters.getValue(RANGE_MAXIMUM, workspace);
+        int nBins = parameters.getValue(NUMBER_OF_BINS, workspace);
         String graphType = parameters.getValue(GRAPH_TYPE, workspace);
         boolean showDataLabels = parameters.getValue(SHOW_DATA_LABELS, workspace);
 
@@ -188,6 +284,12 @@ public class DisplayGraph extends Module {
                 Objs inputObjects = workspace.getObjects(inputObjectsName);
                 graphJSON = getObjectMeasurementsJSON(inputObjects, new String[] { objectMeasurementName });
                 graphJSON.put("type", graphType.toLowerCase());
+                break;
+            case GraphSources.OBJECT_MEASUREMENT_HISTOGRAM:
+                inputObjects = workspace.getObjects(inputObjectsName);
+                graphJSON = getObjectMeasurementHistogramJSON(inputObjects, new String[] { objectMeasurementName },
+                        rangeMin, rangeMax, nBins);
+                graphJSON.put("type", "bar");
                 break;
         }
 
@@ -208,8 +310,12 @@ public class DisplayGraph extends Module {
         parameters.add(new ChoiceP(GRAPH_SOURCE, this, GraphSources.CHANNEL_COMPONENTS, GraphSources.ALL));
         parameters.add(new InputObjectsP(INPUT_OBJECTS, this));
         parameters.add(new ObjectMeasurementP(OBJECT_MEASUREMENT, this));
+        parameters.add(new DoubleP(RANGE_MINIMUM, this, 0d));
+        parameters.add(new DoubleP(RANGE_MAXIMUM, this, 100d));
+        parameters.add(new IntegerP(NUMBER_OF_BINS, this, 10));
         parameters.add(new ChoiceP(GRAPH_TYPE, this, GraphTypes.BAR_CHART, GraphTypes.ALL));
         parameters.add(new BooleanP(SHOW_DATA_LABELS, this, false));
+
     }
 
     @Override
@@ -230,6 +336,19 @@ public class DisplayGraph extends Module {
                 ref.setObjectName(parameters.getValue(INPUT_OBJECTS, null));
 
                 returnedParameters.add(parameters.getParameter(GRAPH_TYPE));
+
+                break;
+
+            case GraphSources.OBJECT_MEASUREMENT_HISTOGRAM:
+                returnedParameters.add(parameters.getParameter(INPUT_OBJECTS));
+                returnedParameters.add(parameters.getParameter(OBJECT_MEASUREMENT));
+
+                ref = parameters.getParameter(OBJECT_MEASUREMENT);
+                ref.setObjectName(parameters.getValue(INPUT_OBJECTS, null));
+
+                returnedParameters.add(parameters.getParameter(RANGE_MINIMUM));
+                returnedParameters.add(parameters.getParameter(RANGE_MAXIMUM));
+                returnedParameters.add(parameters.getParameter(NUMBER_OF_BINS));
 
                 break;
         }
