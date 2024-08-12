@@ -1,23 +1,18 @@
 package io.github.mianalysis.miaserver.utils;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.xml.sax.SAXException;
 
 import com.drew.lang.annotations.Nullable;
 
@@ -43,7 +38,11 @@ public class JSONWriter {
 
         JSONArray jsonArray = new JSONArray();
 
-        for (File workflowFile : workflows)
+        // TreeMap<String,File> sortedList = new TreeMap<>();
+        // for (File workflowFile:workflows)
+        //     sortedList.put(workflowFile.getName(),workflowFile);
+
+        for (File workflowFile : new TreeSet<>(workflows))
             jsonArray.put(getWorkflowJSON(workflowFile));
 
         json.put("workflows", jsonArray);

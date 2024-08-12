@@ -199,6 +199,9 @@ public class DisplayImage extends Module {
             e.printStackTrace();
         }
 
+        if (showOutput)
+            image.show();
+
         return Status.PASS;
 
     }
