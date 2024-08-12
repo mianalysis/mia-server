@@ -39,9 +39,10 @@ public class DisplayGraph extends Module {
 
     public interface GraphSources {
         String CHANNEL_COMPONENTS = "Channel components";
+        String IMAGE_INTENSITY_HISTOGRAM = "Image intensity histogram";
         String OBJECT_MEASUREMENTS = "Object measurements";
 
-        String[] ALL = new String[] { CHANNEL_COMPONENTS, OBJECT_MEASUREMENTS };
+        String[] ALL = new String[] { CHANNEL_COMPONENTS, IMAGE_INTENSITY_HISTOGRAM, OBJECT_MEASUREMENTS };
 
     }
 
@@ -91,7 +92,15 @@ public class DisplayGraph extends Module {
 
     public JSONObject getChannelComponentsJSON() {
         JSONObject graphJSON = new JSONObject();
-        graphJSON.put("source", GraphSources.CHANNEL_COMPONENTS);
+        graphJSON.put("source", GraphSources.CHANNEL_COMPONENTS);        
+
+        return graphJSON;
+
+    }
+
+    public JSONObject getImageIntensityHistogramJSON() {
+        JSONObject graphJSON = new JSONObject();
+        graphJSON.put("source", GraphSources.IMAGE_INTENSITY_HISTOGRAM);
 
         return graphJSON;
 
@@ -168,18 +177,21 @@ public class DisplayGraph extends Module {
         switch (graphSource) {
             case GraphSources.CHANNEL_COMPONENTS:
             default:
-                System.out.println("Channel components");
                 graphJSON = getChannelComponentsJSON();
+                graphJSON.put("type", graphType.toLowerCase());
+                break;
+            case GraphSources.IMAGE_INTENSITY_HISTOGRAM:
+                graphJSON = getImageIntensityHistogramJSON();
+                graphJSON.put("type", "bar");
                 break;
             case GraphSources.OBJECT_MEASUREMENTS:
-                System.out.println("Object measurements");
                 Objs inputObjects = workspace.getObjects(inputObjectsName);
                 graphJSON = getObjectMeasurementsJSON(inputObjects, new String[] { objectMeasurementName });
+                graphJSON.put("type", graphType.toLowerCase());
                 break;
         }
 
-        graphJSON.put("type", graphType.toLowerCase());
-        graphJSON.put("showDataLabels",showDataLabels);
+        graphJSON.put("showDataLabels", showDataLabels);
 
         try {
             ProcessResult.getInstance().put("graph", graphJSON);
@@ -206,6 +218,10 @@ public class DisplayGraph extends Module {
 
         returnedParameters.add(parameters.getParameter(GRAPH_SOURCE));
         switch ((String) parameters.getValue(GRAPH_SOURCE, null)) {
+            case GraphSources.CHANNEL_COMPONENTS:
+                returnedParameters.add(parameters.getParameter(GRAPH_TYPE));
+                break;
+
             case GraphSources.OBJECT_MEASUREMENTS:
                 returnedParameters.add(parameters.getParameter(INPUT_OBJECTS));
                 returnedParameters.add(parameters.getParameter(OBJECT_MEASUREMENT));
@@ -213,10 +229,11 @@ public class DisplayGraph extends Module {
                 ObjectMeasurementP ref = parameters.getParameter(OBJECT_MEASUREMENT);
                 ref.setObjectName(parameters.getValue(INPUT_OBJECTS, null));
 
+                returnedParameters.add(parameters.getParameter(GRAPH_TYPE));
+
                 break;
         }
 
-        returnedParameters.add(parameters.getParameter(GRAPH_TYPE));
         returnedParameters.add(parameters.getParameter(SHOW_DATA_LABELS));
 
         return returnedParameters;
