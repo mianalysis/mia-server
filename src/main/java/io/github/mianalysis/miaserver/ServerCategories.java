@@ -1,4 +1,4 @@
-package io.github.mianalysis.miaserver.modules;
+package io.github.mianalysis.miaserver;
 
 import io.github.mianalysis.mia.module.Categories;
 import io.github.mianalysis.mia.module.Category;

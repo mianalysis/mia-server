@@ -1,10 +1,9 @@
 package io.github.mianalysis.miaserver;
 
+import java.io.File;
+
 import io.github.mianalysis.mia.module.AvailableModules;
-import io.github.mianalysis.miaserver.modules.AddPathsToMetadata;
-import io.github.mianalysis.miaserver.modules.DisplayGraph;
-import io.github.mianalysis.miaserver.modules.DisplayImage;
-import io.github.mianalysis.miaserver.modules.DisplayMessage;
+import io.github.mianalysis.mia.module.Module;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
@@ -19,11 +18,17 @@ public class ConfigureWorkflows {
         // Launching MIA
         new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
-        // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(AddPathsToMetadata.class);
-        AvailableModules.addModuleName(DisplayGraph.class);
-        AvailableModules.addModuleName(DisplayImage.class);
-        AvailableModules.addModuleName(DisplayMessage.class);
+        File[] moduleFiles = new File("src/main/java/io/github/mianalysis/miaserver/modules/").listFiles();
 
+        // Adding the new modules to MIA's list of available modules.
+        for (File moduleFile : moduleFiles) {
+            try {
+                String className = "io.github.mianalysis.miaserver.modules."
+                        + moduleFile.getName().replace(".java", "");
+                AvailableModules.addModuleName((Class<Module>) Class.forName(className));
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

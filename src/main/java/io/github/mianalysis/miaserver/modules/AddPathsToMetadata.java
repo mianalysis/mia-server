@@ -6,6 +6,7 @@ import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import io.github.mianalysis.miaserver.ServerCategories;
 import io.github.mianalysis.miaserver.beans.CloudWorkspace;
 
 import io.github.mianalysis.mia.module.Category;
