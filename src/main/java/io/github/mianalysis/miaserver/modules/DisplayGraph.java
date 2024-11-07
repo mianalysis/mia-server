@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
+import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.AvailableModules;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
@@ -20,6 +21,7 @@ import io.github.mianalysis.mia.object.parameters.ObjectMeasurementP;
 import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.parameters.text.DoubleP;
 import io.github.mianalysis.mia.object.parameters.text.IntegerP;
+import io.github.mianalysis.mia.object.parameters.text.StringP;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
@@ -42,6 +44,8 @@ public class DisplayGraph extends Module {
     public static final String NUMBER_OF_BINS = "Number of bins";
     public static final String GRAPH_TYPE = "Graph type";
     public static final String SHOW_DATA_LABELS = "Show data labels";
+    public static final String X_LABEL = "X-axis label";
+    public static final String Y_LABEL = "Y-axis label";
 
     public interface GraphSources {
         String CHANNEL_COMPONENTS = "Channel components";
@@ -188,7 +192,7 @@ public class DisplayGraph extends Module {
             double rangeMax, int nBins) {
         JSONObject dataJSON = new JSONObject();
         double[] binCentres = getBinCentres(rangeMin, rangeMax, nBins);
-        
+
         dataJSON.put("labels", binCentres);
 
         JSONArray datasetJSON = new JSONArray();
@@ -205,28 +209,32 @@ public class DisplayGraph extends Module {
             double[] binCentres) {
         JSONObject datasetJSON = new JSONObject();
 
-        double[] data = new double[objs.size()];
-        String[] backgroundColor = new String[objs.size()];
-
-        int i = 0;
-        for (Obj obj : objs.values()) {
-            Measurement measurement = obj.getMeasurement(measurementName);
-            if (measurement == null) {
-                data[i] = Double.NaN;
-            } else {
-                double value = measurement.getValue();
-                int closestIdx = getClosestBinIndex(value, binCentres);
-                data[closestIdx]++;
-            }
-
-            backgroundColor[i++] = "red";
-
-        }
-
         datasetJSON.put("label", measurementName);
         datasetJSON.put("borderWidth", 1);
-        datasetJSON.put("data", data);
-        datasetJSON.put("backgroundColor", backgroundColor);
+
+        if (objs.size() > 0) {
+            double[] data = new double[binCentres.length];
+            String[] backgroundColor = new String[objs.size()];
+
+            int i = 0;
+            for (Obj obj : objs.values()) {
+                Measurement measurement = obj.getMeasurement(measurementName);
+                if (measurement == null) {
+                    data[i] = Double.NaN;
+                } else {
+                    double value = measurement.getValue();
+                    int closestIdx = getClosestBinIndex(value, binCentres);
+                    data[closestIdx]++;
+                }
+
+                backgroundColor[i++] = "#f472b6";
+
+            }
+
+            datasetJSON.put("data", data);
+            datasetJSON.put("backgroundColor", backgroundColor);
+
+        }
 
         return datasetJSON;
 
@@ -269,6 +277,10 @@ public class DisplayGraph extends Module {
         int nBins = parameters.getValue(NUMBER_OF_BINS, workspace);
         String graphType = parameters.getValue(GRAPH_TYPE, workspace);
         boolean showDataLabels = parameters.getValue(SHOW_DATA_LABELS, workspace);
+        String xLabel = parameters.getValue(X_LABEL, workspace);
+        String yLabel = parameters.getValue(Y_LABEL, workspace);
+
+        MIA.log.writeDebug("NOTE: Should do axis formatting, etc. in Java rather than client-side");
 
         JSONObject graphJSON;
         switch (graphSource) {
@@ -280,17 +292,27 @@ public class DisplayGraph extends Module {
             case GraphSources.IMAGE_INTENSITY_HISTOGRAM:
                 graphJSON = getImageIntensityHistogramJSON();
                 graphJSON.put("type", "bar");
+                graphJSON.put("xlabel", "Intensity");
+                graphJSON.put("ylabel", "Frequency");
                 break;
             case GraphSources.OBJECT_MEASUREMENTS:
                 Objs inputObjects = workspace.getObjects(inputObjectsName);
                 graphJSON = getObjectMeasurementsJSON(inputObjects, new String[] { objectMeasurementName });
                 graphJSON.put("type", graphType.toLowerCase());
+                switch (graphType) {
+                    case GraphTypes.BAR_CHART:
+                        graphJSON.put("xlabel", xLabel);
+                        graphJSON.put("ylabel", yLabel);
+                        break;
+                }
                 break;
             case GraphSources.OBJECT_MEASUREMENT_HISTOGRAM:
                 inputObjects = workspace.getObjects(inputObjectsName);
                 graphJSON = getObjectMeasurementHistogramJSON(inputObjects, new String[] { objectMeasurementName },
                         rangeMin, rangeMax, nBins);
                 graphJSON.put("type", "bar");
+                graphJSON.put("xlabel", xLabel);
+                graphJSON.put("ylabel", yLabel);
                 break;
         }
 
@@ -316,6 +338,8 @@ public class DisplayGraph extends Module {
         parameters.add(new IntegerP(NUMBER_OF_BINS, this, 10));
         parameters.add(new ChoiceP(GRAPH_TYPE, this, GraphTypes.BAR_CHART, GraphTypes.ALL));
         parameters.add(new BooleanP(SHOW_DATA_LABELS, this, false));
+        parameters.add(new StringP(X_LABEL, this));
+        parameters.add(new StringP(Y_LABEL, this));
 
     }
 
@@ -337,6 +361,12 @@ public class DisplayGraph extends Module {
                 ref.setObjectName(parameters.getValue(INPUT_OBJECTS, null));
 
                 returnedParameters.add(parameters.getParameter(GRAPH_TYPE));
+                switch ((String) parameters.getValue(GRAPH_TYPE, null)) {
+                    case GraphTypes.BAR_CHART:
+                        returnedParameters.add(parameters.getParameter(X_LABEL));
+                        returnedParameters.add(parameters.getParameter(Y_LABEL));
+                        break;
+                }
 
                 break;
 
@@ -350,6 +380,8 @@ public class DisplayGraph extends Module {
                 returnedParameters.add(parameters.getParameter(RANGE_MINIMUM));
                 returnedParameters.add(parameters.getParameter(RANGE_MAXIMUM));
                 returnedParameters.add(parameters.getParameter(NUMBER_OF_BINS));
+                returnedParameters.add(parameters.getParameter(X_LABEL));
+                returnedParameters.add(parameters.getParameter(Y_LABEL));
 
                 break;
         }

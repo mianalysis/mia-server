@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Polygon;
 import java.util.HashMap;
 
-import org.jfree.data.json.impl.JSONArray;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
@@ -32,7 +32,6 @@ import io.github.mianalysis.miaserver.ServerCategories;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
-
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class DisplayObjects extends AbstractOverlay {
@@ -64,32 +63,33 @@ public class DisplayObjects extends AbstractOverlay {
 
     }
 
-    public static JSONObject getObjectsJSON(Objs inputObjects, HashMap<Integer, Color> colours) throws InterruptedException {
-        JSONObject objectsJSON = new JSONObject();
-        objectsJSON.put("name",inputObjects.getName());
+    public static JSONObject getOverlayJSON(Objs inputObjects, HashMap<Integer, Color> colours)
+            throws InterruptedException {
+        JSONObject overlayJSON = new JSONObject();
 
-        JSONArray objectJSONArray = new JSONArray();
-        for (Obj inputObject:inputObjects.values()) {
-            JSONObject objectJSON = new JSONObject();
+        JSONArray regionsJSONArray = new JSONArray();
+        for (Obj inputObject : inputObjects.values()) {
+            JSONObject objectOverlayJSON = new JSONObject();
 
             Polygon polygon = inputObject.getRoi(0).getPolygon();
 
-            objectJSON.put("id", inputObject.getID());
-            objectJSON.put("x", polygon.xpoints);
-            objectJSON.put("y", polygon.ypoints);
-            objectJSON.put("n", polygon.npoints);
+            objectOverlayJSON.put("x", polygon.xpoints);
+            objectOverlayJSON.put("y", polygon.ypoints);
+            objectOverlayJSON.put("n", polygon.npoints);
 
             Color colour = colours.get(inputObject.getID());
-            String hex = String.format("#%02x%02x%02x%02x",colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha());
-            objectJSON.put("colour", hex);
+            String hex = String.format("#%02x%02x%02x%02x", colour.getRed(), colour.getGreen(), colour.getBlue(),
+                    colour.getAlpha());
+            objectOverlayJSON.put("fillcolour", hex);
+            objectOverlayJSON.put("strokecolour", hex);
 
-            objectJSONArray.add(objectJSON);
+            regionsJSONArray.put(objectOverlayJSON);
 
         }
 
-        objectsJSON.put("objects", objectJSONArray);
+        overlayJSON.put("regions", regionsJSONArray);
 
-        return objectsJSON;
+        return overlayJSON;
 
     }
 
@@ -122,8 +122,14 @@ public class DisplayObjects extends AbstractOverlay {
         HashMap<Integer, Color> colours = getColours(inputObjects, workspace);
 
         try {
-            JSONObject objectsJSON = getObjectsJSON(inputObjects, colours);
-            ProcessResult.getInstance().put("objects", objectsJSON);
+            ProcessResult processResult = ProcessResult.getInstance();
+            JSONObject overlayJSON = getOverlayJSON(inputObjects, colours);
+            
+            if (!processResult.has("overlays"))
+                processResult.put("overlays", new JSONArray());
+
+            ((JSONArray) processResult.get("overlays")).put(overlayJSON);
+            
         } catch (Exception e) {
             e.printStackTrace();
         }

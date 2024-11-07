@@ -11,16 +11,13 @@ import org.scijava.plugin.Plugin;
 
 import com.drew.lang.annotations.Nullable;
 
-import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.AvailableModules;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.module.objects.filter.AbstractObjectFilter;
 import io.github.mianalysis.mia.module.objects.filter.AbstractTextObjectFilter;
 import io.github.mianalysis.mia.object.Measurement;
 import io.github.mianalysis.mia.object.Obj;
-import io.github.mianalysis.mia.object.ObjMetadata;
 import io.github.mianalysis.mia.object.Objs;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.parameters.ChoiceP;
@@ -35,14 +32,21 @@ import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
 import io.github.mianalysis.mia.process.string.CommaSeparatedStringInterpreter;
 import io.github.mianalysis.miaserver.ServerCategories;
-import io.github.mianalysis.miaserver.parameters.ObjectSelectorP;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class SelectObjects extends AbstractTextObjectFilter {
 
-    public static final String OBJECT_IDS = "IDs (comma-separated)";
+    public static final String SELECTION_MODE = "Selection mode";
+
+    public interface SelectionModes {
+        String SINGLE = "Single";
+        String MULTIPLE_TOGGLE = "Multiple (toggle)";
+
+        String[] ALL = new String[]{SINGLE, MULTIPLE_TOGGLE};
+
+    }
 
     public static void main(String[] args) {
         // The following must be called before initialising ImageJ
@@ -124,7 +128,7 @@ public class SelectObjects extends AbstractTextObjectFilter {
         String filterMode = parameters.getValue(FILTER_MODE, workspace);
         String outputObjectsName = parameters.getValue(OUTPUT_FILTERED_OBJECTS, workspace);
         String filterMethod = parameters.getValue(FILTER_METHOD, workspace);
-        String idsString = parameters.getValue(OBJECT_IDS, workspace);
+        String idsString = parameters.getValue(REFERENCE_VALUE, workspace);
         boolean storeSummary = parameters.getValue(STORE_SUMMARY_RESULTS, workspace);
         boolean storeIndividual = parameters.getValue(STORE_INDIVIDUAL_RESULTS, workspace);
 
@@ -190,7 +194,7 @@ public class SelectObjects extends AbstractTextObjectFilter {
     protected void initialiseParameters() {
         super.initialiseParameters();
 
-        parameters.add(new ObjectSelectorP(OBJECT_IDS, this));
+        parameters.add(new ChoiceP(SELECTION_MODE, this, SelectionModes.SINGLE, SelectionModes.ALL));
 
     }
 
@@ -200,7 +204,7 @@ public class SelectObjects extends AbstractTextObjectFilter {
 
         returnedParameters.addAll(super.updateAndGetParameters());
 
-        returnedParameters.add(parameters.getParameter(OBJECT_IDS));
+        returnedParameters.add(parameters.getParameter(SELECTION_MODE));
 
         returnedParameters.addAll(super.updateAndGetMeasurementParameters());
 
