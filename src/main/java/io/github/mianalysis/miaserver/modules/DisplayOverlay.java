@@ -34,7 +34,7 @@ import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
-public class DisplayObjects extends AbstractOverlay {
+public class DisplayOverlay extends AbstractOverlay {
 
     public static final String INPUT_SEPARATOR = "Object input";
 
@@ -59,7 +59,7 @@ public class DisplayObjects extends AbstractOverlay {
         new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
         // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(DisplayObjects.class);
+        AvailableModules.addModuleName(DisplayOverlay.class);
 
     }
 
@@ -93,7 +93,7 @@ public class DisplayObjects extends AbstractOverlay {
 
     }
 
-    public DisplayObjects(Modules modules) {
+    public DisplayOverlay(Modules modules) {
         // The first argument is the name by which the module will be seen in the GUI.
         super("Display objects", modules);
     }

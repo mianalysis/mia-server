@@ -1,11 +1,11 @@
 package io.github.mianalysis.miaserver.modules;
 
-import java.util.Arrays;
+import java.awt.Polygon;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
@@ -15,14 +15,18 @@ import io.github.mianalysis.mia.module.AvailableModules;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.module.objects.filter.AbstractTextObjectFilter;
+import io.github.mianalysis.mia.module.objects.filter.AbstractObjectFilter;
 import io.github.mianalysis.mia.object.Measurement;
 import io.github.mianalysis.mia.object.Obj;
+import io.github.mianalysis.mia.object.ObjMetadata;
 import io.github.mianalysis.mia.object.Objs;
 import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.parameters.BooleanP;
 import io.github.mianalysis.mia.object.parameters.ChoiceP;
 import io.github.mianalysis.mia.object.parameters.Parameters;
+import io.github.mianalysis.mia.object.parameters.SeparatorP;
 import io.github.mianalysis.mia.object.refs.ObjMeasurementRef;
+import io.github.mianalysis.mia.object.refs.ObjMetadataRef;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
@@ -30,21 +34,29 @@ import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
 import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
-import io.github.mianalysis.mia.process.string.CommaSeparatedStringInterpreter;
 import io.github.mianalysis.miaserver.ServerCategories;
+import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
-public class SelectObjects extends AbstractTextObjectFilter {
+public class SelectObjects extends AbstractObjectFilter {
 
+    public static final String SELECTION_SEPARATOR = "Object selection controls";
     public static final String SELECTION_MODE = "Selection mode";
 
     public interface SelectionModes {
         String SINGLE = "Single";
         String MULTIPLE_TOGGLE = "Multiple (toggle)";
 
-        String[] ALL = new String[]{SINGLE, MULTIPLE_TOGGLE};
+        String[] ALL = new String[] { SINGLE, MULTIPLE_TOGGLE };
+
+    }
+
+    public interface Measurements {
+        String SELECTED = "SELECTED";
+
+        String[] ALL = new String[] { SELECTED };
 
     }
 
@@ -83,6 +95,30 @@ public class SelectObjects extends AbstractTextObjectFilter {
         return "";
     }
 
+    public static JSONObject getObjectsJSON(Objs inputObjects, String selectionMode)
+            throws InterruptedException {
+        JSONObject regionsJSON = new JSONObject();
+
+        JSONArray regionsJSONArray = new JSONArray();
+        for (Obj inputObject : inputObjects.values()) {
+            JSONObject regionJSON = new JSONObject();
+
+            Polygon polygon = inputObject.getRoi(0).getPolygon();
+
+            regionJSON.put("x", polygon.xpoints);
+            regionJSON.put("y", polygon.ypoints);
+            regionJSON.put("n", polygon.npoints);
+
+            regionsJSONArray.put(regionJSON);
+
+        }
+
+        regionsJSON.put("regions", regionsJSONArray);
+
+        return regionsJSON;
+
+    }
+
     protected static void processRemoval(Obj inputObject, @Nullable Objs outputObjects, Iterator<Obj> iterator) {
         // Getting existing relationships
         LinkedHashMap<String, Objs> children = inputObject.getChildren();
@@ -118,71 +154,87 @@ public class SelectObjects extends AbstractTextObjectFilter {
                 }
             }
         }
+
         iterator.remove();
+
     }
 
     @Override
     public Status process(Workspace workspace) {
         // Getting parameters
         String inputObjectsName = parameters.getValue(INPUT_OBJECTS, workspace);
-        String filterMode = parameters.getValue(FILTER_MODE, workspace);
-        String outputObjectsName = parameters.getValue(OUTPUT_FILTERED_OBJECTS, workspace);
-        String filterMethod = parameters.getValue(FILTER_METHOD, workspace);
-        String idsString = parameters.getValue(REFERENCE_VALUE, workspace);
-        boolean storeSummary = parameters.getValue(STORE_SUMMARY_RESULTS, workspace);
-        boolean storeIndividual = parameters.getValue(STORE_INDIVIDUAL_RESULTS, workspace);
+        String selectionMode = parameters.getValue(SELECTION_MODE, workspace);
 
         // Getting input objects
         Objs inputObjects = workspace.getObjects(inputObjectsName);
 
-        boolean moveObjects = filterMode.equals(FilterModes.MOVE_FILTERED);
-        boolean remove = !filterMode.equals(FilterModes.DO_NOTHING);
-        Objs outputObjects = moveObjects ? new Objs(outputObjectsName, inputObjects) : null;
+        // Initialising all measurements
+        for (Obj inputObject : inputObjects.values())
+            if (inputObject.getMeasurement(Measurements.SELECTED) == null)
+                inputObject.addMeasurement(new Measurement(Measurements.SELECTED, 0));
 
-        int[] ids = CommaSeparatedStringInterpreter.interpretIntegers(idsString, true, inputObjects.getLargestID());
-        List<Integer> idsList = Arrays.stream(ids).boxed().collect(Collectors.toList());
-
-        int count = 0;
-        Iterator<Obj> iterator = inputObjects.values().iterator();
-        while (iterator.hasNext()) {
-            Obj inputObject = iterator.next();
-
-            // Checking the main filter
-            boolean conditionMet = false;
-            for (int testID:idsList) {
-                conditionMet = testFilter(String.valueOf(inputObject.getID()), String.valueOf(testID), filterMethod);
-                if (conditionMet)
-                    break;
-            }
-            
-            // Adding measurements
-            if (storeIndividual) {
-                String measurementName = getIndividualFullName(filterMethod, "ID", "selected IDs");
-                inputObject.addMeasurement(new Measurement(measurementName, conditionMet ? 1 : 0));
-            }
-
-            if (conditionMet) {
-                count++;
-                if (remove)
-                    processRemoval(inputObject, outputObjects, iterator);
-            }
+        try {
+            JSONObject selectableJSON = getObjectsJSON(inputObjects, selectionMode);
+            ProcessResult.getInstance().put("objects", selectableJSON);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        // If moving objects, add them to the workspace
-        if (moveObjects)
-            workspace.addObjects(outputObjects);
+        // boolean moveObjects = filterMode.equals(FilterModes.MOVE_FILTERED);
+        // boolean remove = !filterMode.equals(FilterModes.DO_NOTHING);
+        // Objs outputObjects = moveObjects ? new Objs(outputObjectsName, inputObjects)
+        // : null;
 
-        // If storing the result, create a new metadata item for it
-        if (storeSummary) {
-            String measurementName = getSummaryFullName(inputObjectsName, filterMethod, "ID", "selected IDs");
-            workspace.getMetadata().put(measurementName, count);
-        }
+        // int[] ids = CommaSeparatedStringInterpreter.interpretIntegers(idsString,
+        // true, inputObjects.getLargestID());
+        // List<Integer> idsList =
+        // Arrays.stream(ids).boxed().collect(Collectors.toList());
+
+        // int count = 0;
+        // Iterator<Obj> iterator = inputObjects.values().iterator();
+        // while (iterator.hasNext()) {
+        // Obj inputObject = iterator.next();
+
+        // // Checking the main filter
+        // boolean conditionMet = false;
+        // for (int testID:idsList) {
+        // conditionMet = testFilter(String.valueOf(inputObject.getID()),
+        // String.valueOf(testID), filterMethod);
+        // if (conditionMet)
+        // break;
+        // }
+
+        // // Adding measurements
+        // if (storeIndividual) {
+        // String measurementName = getIndividualFullName(filterMethod, "ID", "selected
+        // IDs");
+        // inputObject.addMeasurement(new Measurement(measurementName, conditionMet ? 1
+        // : 0));
+        // }
+
+        // if (conditionMet) {
+        // count++;
+        // if (remove)
+        // processRemoval(inputObject, outputObjects, iterator);
+        // }
+        // }
+
+        // // If moving objects, add them to the workspace
+        // if (moveObjects)
+        // workspace.addObjects(outputObjects);
+
+        // // If storing the result, create a new metadata item for it
+        // if (storeSummary) {
+        // String measurementName = getSummaryFullName(inputObjectsName, filterMethod,
+        // "ID", "selected IDs");
+        // workspace.getMetadata().put(measurementName, count);
+        // }
 
         // Showing objects
         if (showOutput) {
             inputObjects.convertToImageIDColours().show(false);
-            if (moveObjects && outputObjects != null)
-                outputObjects.convertToImageIDColours().show(false);
+            // if (moveObjects && outputObjects != null)
+            // outputObjects.convertToImageIDColours().show(false);
 
         }
 
@@ -194,7 +246,8 @@ public class SelectObjects extends AbstractTextObjectFilter {
     protected void initialiseParameters() {
         super.initialiseParameters();
 
-        parameters.add(new ChoiceP(SELECTION_MODE, this, SelectionModes.SINGLE, SelectionModes.ALL));
+        parameters.add(new SeparatorP(SELECTION_SEPARATOR, this));
+        parameters.add(new ChoiceP(SELECTION_MODE, this, SelectionModes.MULTIPLE_TOGGLE, SelectionModes.ALL));
 
     }
 
@@ -204,9 +257,8 @@ public class SelectObjects extends AbstractTextObjectFilter {
 
         returnedParameters.addAll(super.updateAndGetParameters());
 
+        returnedParameters.add(parameters.getParameter(SELECTION_SEPARATOR));
         returnedParameters.add(parameters.getParameter(SELECTION_MODE));
-
-        returnedParameters.addAll(super.updateAndGetMeasurementParameters());
 
         return returnedParameters;
 
@@ -222,17 +274,13 @@ public class SelectObjects extends AbstractTextObjectFilter {
         Workspace workspace = null;
         ObjMeasurementRefs returnedRefs = super.updateAndGetObjectMeasurementRefs();
 
-        if ((boolean) parameters.getValue(STORE_INDIVIDUAL_RESULTS, workspace)) {
-            String filterMethod = parameters.getValue(FILTER_METHOD, workspace);
-            String measurementName = getIndividualFullName(filterMethod, "ID", "selected IDs");
-            String inputObjectsName = parameters.getValue(INPUT_OBJECTS, workspace);
+        ObjMeasurementRef ref = objectMeasurementRefs.getOrPut(Measurements.SELECTED);
+        ref.setObjectsName(parameters.getValue(INPUT_OBJECTS, workspace));
 
-            returnedRefs.add(new ObjMeasurementRef(measurementName, inputObjectsName));
-            if (parameters.getValue(FILTER_METHOD, workspace).equals(FilterModes.MOVE_FILTERED)) {
-                String outputObjectsName = parameters.getValue(OUTPUT_FILTERED_OBJECTS, workspace);
-                returnedRefs.add(new ObjMeasurementRef(measurementName, outputObjectsName));
-            }
-        }
+        if (parameters.getValue(FILTER_MODE, workspace).equals(FilterModes.MOVE_FILTERED))
+            ref.setObjectsName(parameters.getValue(OUTPUT_FILTERED_OBJECTS, workspace));
+
+        returnedRefs.add(ref);
 
         return returnedRefs;
 
@@ -245,23 +293,7 @@ public class SelectObjects extends AbstractTextObjectFilter {
 
     @Override
     public MetadataRefs updateAndGetMetadataReferences() {
-        Workspace workspace = null;
-
-        MetadataRefs returnedRefs = new MetadataRefs();
-
-        // Filter results are stored as a metadata item since they apply to the whole
-        // set
-        if ((boolean) parameters.getValue(STORE_SUMMARY_RESULTS, workspace)) {
-            String inputObjectsName = parameters.getValue(INPUT_OBJECTS, workspace);
-            String filterMethod = parameters.getValue(FILTER_METHOD, workspace);
-            String measurementName = getSummaryFullName(inputObjectsName, filterMethod, "ID", "selected IDs");
-
-            returnedRefs.add(metadataRefs.getOrPut(measurementName));
-
-        }
-
-        return returnedRefs;
-
+        return null;
     }
 
     @Override

@@ -29,6 +29,7 @@ import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.parameters.abstrakt.ChoiceType;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 import io.github.mianalysis.mia.process.analysishandling.AnalysisTester;
+import io.github.mianalysis.miaserver.parameters.ClickListenerP;
 
 public class JSONWriter {
     private static GUISeparator loadSeparator;
@@ -40,7 +41,7 @@ public class JSONWriter {
 
         // TreeMap<String,File> sortedList = new TreeMap<>();
         // for (File workflowFile:workflows)
-        //     sortedList.put(workflowFile.getName(),workflowFile);
+        // sortedList.put(workflowFile.getName(),workflowFile);
 
         for (File workflowFile : new TreeSet<>(workflows))
             jsonArray.put(getWorkflowJSON(workflowFile));
@@ -95,7 +96,7 @@ public class JSONWriter {
         AnalysisTester.testModules(modules, workspace, null);
 
         // Check if there are no controls to be displayed
-        if (!modules.hasVisibleParameters())
+        if (!modules.hasVisibleParameters() && !hasClickListener(modules))
             return json;
 
         JSONArray jsonArray = new JSONArray();
@@ -135,7 +136,7 @@ public class JSONWriter {
 
             } else {
                 if (separator.isEnabled() && module.isRunnable() || module.invalidParameterIsVisible())
-                    if (module.hasVisibleParameters() || module.canBeDisabled())
+                    if (module.hasVisibleParameters() || module.canBeDisabled() || hasClickListener(module))
                         jsonArray.put(getModuleJSON(module));
 
             }
@@ -148,6 +149,25 @@ public class JSONWriter {
         json.put("modules", jsonArray);
 
         return json;
+
+    }
+
+    public static boolean hasClickListener(Modules modules) {
+        for (Module module : modules)
+            for (Parameter parameter : module.updateAndGetParameters().values())
+                if (parameter instanceof ClickListenerP)
+                    return true;
+
+        return false;
+
+    }
+
+    public static boolean hasClickListener(Module module) {
+        for (Parameter parameter : module.updateAndGetParameters().values())
+            if (parameter instanceof ClickListenerP)
+                return true;
+
+        return false;
 
     }
 
@@ -175,7 +195,7 @@ public class JSONWriter {
             @Nullable Integer groupCollectionNumber) {
         JSONArray jsonArray = new JSONArray();
         for (Parameter parameter : parameters.values())
-            if (parameter.isVisible() || parameter instanceof ParameterGroup)
+            if (parameter.isVisible() || parameter instanceof ParameterGroup || parameter instanceof ClickListenerP)
                 jsonArray.put(getParameterJSON(parameter, parentGroup, groupCollectionNumber));
 
         return jsonArray;
@@ -186,6 +206,7 @@ public class JSONWriter {
             @Nullable Integer groupCollectionNumber) {
         JSONObject jsonObject = new JSONObject();
 
+        jsonObject.put("moduleid", parameter.getModule().getModuleID());
         jsonObject.put("name", parameter.getName());
         jsonObject.put("nickname", parameter.getNickname());
         jsonObject.put("value", parameter.getRawStringValue());
