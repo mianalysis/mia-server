@@ -16,6 +16,7 @@ import io.github.mianalysis.mia.object.Workspaces;
 public class CloudWorkspace {
 
   private Workspace workspace = null;
+  private static int workspaceCount = 0;
 
   public Workspace initialiseWorkspace(String inputPath) {
     Workspaces workspaces = new Workspaces();
@@ -32,13 +33,18 @@ public class CloudWorkspace {
   @PostConstruct
   public void init() {
     // Invoked after dependencies injected
+    workspaceCount++;
     System.out.println("Creating CloudWorkspace");
   }
 
   @PreDestroy
   public void destroy() {
     // Invoked when the WebSocket session ends
+    workspaceCount--;
     System.out.println("Destroying CloudWorkspace");
   }
 
+  public static int getWorkspaceCount() {
+    return workspaceCount;
+  }
 }

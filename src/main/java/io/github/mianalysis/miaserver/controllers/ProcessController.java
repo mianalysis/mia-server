@@ -143,6 +143,9 @@ public class ProcessController {
 			}
 		}
 
+		// Runtime runtime = Runtime.getRuntime();
+		// System.out.println("Memory used = "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users "+CloudWorkspace.getWorkspaceCount());
+
 		if (moduleGroups == null)
 			return ResponseEntity.ok()
 					.contentType(MediaType.APPLICATION_JSON)

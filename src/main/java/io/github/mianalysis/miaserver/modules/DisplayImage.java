@@ -2,7 +2,10 @@ package io.github.mianalysis.miaserver.modules;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
@@ -37,7 +40,6 @@ import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
-
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class DisplayImage extends Module {
 
@@ -71,12 +73,13 @@ public class DisplayImage extends Module {
 
     public static JSONObject getImageJSON(Image image, boolean showImageControls) throws InterruptedException {
         JSONObject imageJSON = new JSONObject();
-        imageJSON.put("name",image.getName());
+        imageJSON.put("name", image.getName());
         imageJSON.put("showcontrols", showImageControls);
 
         JSONArray channelArray = new JSONArray();
 
         ImagePlus ipl = image.getImagePlus();
+        ImageProcessor ipr = ipl.getProcessor();
 
         ipl.setDisplayMode(IJ.COMPOSITE);
 
@@ -89,7 +92,7 @@ public class DisplayImage extends Module {
 
             // Adding pixel information
             // ipl.setPosition((c + 1), z, t);
-            ImageProcessor ipr = channels[c].getProcessor();
+            ipr = channels[c].getProcessor();
             channelObject.put("pixels", getChannelString(ipr));
 
             // Adding LUT information
@@ -107,14 +110,14 @@ public class DisplayImage extends Module {
             lut.getBlues(blues);
             channelObject.put("blue", blues[255] & 0xFF);
 
-            channelObject.put("strength",1);
-            channelObject.put("index",c);
+            channelObject.put("strength", 1);
+            channelObject.put("index", c);
 
             channelArray.put(channelObject);
 
         }
 
-        imageJSON.put("channels",channelArray);
+        imageJSON.put("channels", channelArray);
 
         if (ipl.getOverlay() != null) {
             ImagePlus blankIpl = IJ.createImage("Overlay", ipl.getWidth(), ipl.getHeight(), 1, 8);
@@ -122,9 +125,9 @@ public class DisplayImage extends Module {
             ImagePlus overlayIpl = blankIpl.flatten();
 
             JSONObject channelObject = new JSONObject();
-
+            
             // Adding pixel information
-            ImageProcessor ipr = overlayIpl.getProcessor();
+            ipr = overlayIpl.getProcessor();
             channelObject.put("pixels", getChannelString(ipr));
 
             // Adding LUT information
@@ -142,8 +145,8 @@ public class DisplayImage extends Module {
             lut.getBlues(blues);
             channelObject.put("blue", blues[255] & 0xFF);
 
-            channelObject.put("strength",1);
-            channelObject.put("index",channels.length);
+            channelObject.put("strength", 1);
+            channelObject.put("index", channels.length);
 
             channelArray.put(channelObject);
 
@@ -193,8 +196,38 @@ public class DisplayImage extends Module {
 
         Image image = workspace.getImage(imageName);
 
+        ImagePlus ipl = image.getImagePlus();
+        ImageProcessor ipr = ipl.getProcessor();
+        int hash = 0;
+        for (int x = 0; x < ipl.getWidth(); x++)
+            for (int y = 0; y < ipl.getHeight(); y++)
+                hash = hash * 31 + ipr.get(x, y);
+
+        // Checking if this hash is already present. If it is, don't bother updating
+        // pixel information
+        if (workspace.getMetadata().containsKey("ImageHash")) {
+            if (workspace.getMetadata().get("ImageHash").equals(hash)) {
+                JSONObject imageJSON = new JSONObject();
+                imageJSON.put("name", image.getName());
+                imageJSON.put("showcontrols", showImageControls);
+                imageJSON.put("hashcode", hash);
+                imageJSON.put("channels", new JSONObject());
+
+                ProcessResult.getInstance().put("image", imageJSON);
+
+                if (showOutput)
+                    image.show();
+
+                return Status.PASS;
+
+            }
+        }
+
+        // Otherwise, proceed as usual
         try {
             JSONObject imageJSON = getImageJSON(image, showImageControls);
+            imageJSON.put("hashcode", hash);
+            workspace.getMetadata().put("ImageHash", hash);
             ProcessResult.getInstance().put("image", imageJSON);
         } catch (Exception e) {
             e.printStackTrace();
