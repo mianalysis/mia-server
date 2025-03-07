@@ -10,15 +10,16 @@ import io.github.mianalysis.mia.module.AvailableModules;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.object.Measurement;
 import io.github.mianalysis.mia.object.Obj;
 import io.github.mianalysis.mia.object.Objs;
 import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.measurements.Measurement;
 import io.github.mianalysis.mia.object.parameters.BooleanP;
 import io.github.mianalysis.mia.object.parameters.ChoiceP;
 import io.github.mianalysis.mia.object.parameters.InputObjectsP;
 import io.github.mianalysis.mia.object.parameters.ObjectMeasurementP;
 import io.github.mianalysis.mia.object.parameters.Parameters;
+import io.github.mianalysis.mia.object.parameters.SeparatorP;
 import io.github.mianalysis.mia.object.parameters.text.DoubleP;
 import io.github.mianalysis.mia.object.parameters.text.IntegerP;
 import io.github.mianalysis.mia.object.parameters.text.StringP;
@@ -30,12 +31,17 @@ import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
 import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
 import io.github.mianalysis.miaserver.ServerCategories;
+import io.github.mianalysis.miaserver.parameters.OutputGraphP;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class DisplayGraph extends Module {
+    public static final String GRAPH_OUTPUT_SEPARATOR = "Graph output";
+    public static final String OUTPUT_GRAPH = "Output graph";
+
+    public static final String GRAPH_CONTROLS_SEPARATOR = "Graph controls";
     public static final String GRAPH_SOURCE = "Graph source";
     public static final String INPUT_OBJECTS = "Input objects";
     public static final String OBJECT_MEASUREMENT = "Object measurement";
@@ -269,6 +275,7 @@ public class DisplayGraph extends Module {
 
     @Override
     public Status process(Workspace workspace) {
+        String outputGraphName = parameters.getValue(OUTPUT_GRAPH, workspace);
         String graphSource = parameters.getValue(GRAPH_SOURCE, workspace);
         String inputObjectsName = parameters.getValue(INPUT_OBJECTS, workspace);
         String objectMeasurementName = parameters.getValue(OBJECT_MEASUREMENT, workspace);
@@ -319,7 +326,7 @@ public class DisplayGraph extends Module {
         graphJSON.put("showDataLabels", showDataLabels);
 
         try {
-            ProcessResult.getInstance().put("graph", graphJSON);
+            ProcessResult.getInstance().put(outputGraphName, graphJSON);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -330,6 +337,10 @@ public class DisplayGraph extends Module {
 
     @Override
     protected void initialiseParameters() {
+        parameters.add(new SeparatorP(GRAPH_OUTPUT_SEPARATOR, this));
+        parameters.add(new OutputGraphP(OUTPUT_GRAPH, this));
+
+        parameters.add(new SeparatorP(GRAPH_CONTROLS_SEPARATOR, this));
         parameters.add(new ChoiceP(GRAPH_SOURCE, this, GraphSources.CHANNEL_COMPONENTS, GraphSources.ALL));
         parameters.add(new InputObjectsP(INPUT_OBJECTS, this));
         parameters.add(new ObjectMeasurementP(OBJECT_MEASUREMENT, this));
@@ -347,6 +358,10 @@ public class DisplayGraph extends Module {
     public Parameters updateAndGetParameters() {
         Parameters returnedParameters = new Parameters();
 
+        returnedParameters.add(parameters.getParameter(GRAPH_OUTPUT_SEPARATOR));
+        returnedParameters.add(parameters.getParameter(OUTPUT_GRAPH));
+
+        returnedParameters.add(parameters.getParameter(GRAPH_CONTROLS_SEPARATOR));
         returnedParameters.add(parameters.getParameter(GRAPH_SOURCE));
         switch ((String) parameters.getValue(GRAPH_SOURCE, null)) {
             case GraphSources.CHANNEL_COMPONENTS:

@@ -17,12 +17,12 @@ public class ServerImageRenderer implements ImageRenderer {
     private byte[] outputImage = null;
 
     @Override
-    public void render(Image image, String title, LUT lut, boolean normalise, boolean composite, Overlay overlay) {
+    public void render(Image image, String title, LUT lut, boolean normalise, String displayMode, Overlay overlay) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
             ImagePlus ipl = image.getImagePlus();
 
-            if (composite)
+            if (displayMode.equals("Composite"))
                 ipl.setDisplayMode(IJ.COMPOSITE);
             else
                 ipl.setDisplayMode(IJ.COLOR);
