@@ -22,7 +22,7 @@ import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
-
+@Deprecated
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class DisplayMessage extends Module {
 

@@ -34,14 +34,12 @@ public class CloudWorkspace {
   public void init() {
     // Invoked after dependencies injected
     workspaceCount++;
-    System.out.println("Creating CloudWorkspace");
   }
 
   @PreDestroy
   public void destroy() {
     // Invoked when the WebSocket session ends
     workspaceCount--;
-    System.out.println("Destroying CloudWorkspace");
   }
 
   public static int getWorkspaceCount() {

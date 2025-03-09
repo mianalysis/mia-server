@@ -32,12 +32,12 @@ import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
 import io.github.mianalysis.miaserver.ServerCategories;
 import io.github.mianalysis.miaserver.parameters.OutputGraphP;
-import io.github.mianalysis.miaserver.utils.ProcessResult;
+import io.github.mianalysis.miaserver.utils.GraphStore;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
-public class DisplayGraph extends Module {
+public class CreateGraph extends Module {
     public static final String GRAPH_OUTPUT_SEPARATOR = "Graph output";
     public static final String OUTPUT_GRAPH = "Output graph";
 
@@ -84,13 +84,13 @@ public class DisplayGraph extends Module {
         new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
         // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(DisplayGraph.class);
+        AvailableModules.addModuleName(CreateGraph.class);
 
     }
 
-    public DisplayGraph(Modules modules) {
+    public CreateGraph(Modules modules) {
         // The first argument is the name by which the module will be seen in the GUI.
-        super("Display graph", modules);
+        super("Create graph", modules);
     }
 
     @Override
@@ -326,7 +326,7 @@ public class DisplayGraph extends Module {
         graphJSON.put("showDataLabels", showDataLabels);
 
         try {
-            ProcessResult.getInstance().put(outputGraphName, graphJSON);
+            GraphStore.addGraph(outputGraphName, graphJSON);
         } catch (Exception e) {
             e.printStackTrace();
         }

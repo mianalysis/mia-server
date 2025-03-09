@@ -56,7 +56,8 @@ public class ProcessController {
 	}
 
 	@MessageMapping("/setworkflow")
-	@SendToUser("/queue/parameters")
+	// @SendToUser("/queue/parameters")
+	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> setworkflow(SetWorkflowRequest request) throws Exception {
 		String workflowPath = "src/main/resources/mia/workflows/" + request.getWorkflowName() + ".mia";
 		Modules modules = cloudModules.initialiseModules(workflowPath);
@@ -68,19 +69,31 @@ public class ProcessController {
 
 		ModuleGroups moduleGroups = cloudModuleGroups.initialiseModuleGroups(modules);
 
+		ProcessResult.getInstance().clear();
+
 		if (moduleGroups == null) {
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()).toString());
+			return process();
 		} else {
 			if (moduleGroups.hasPreprocessingGroup())
 				moduleGroups.getPreprocessingGroup().execute(modules, workspace);
 
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
-							cloudWorkspace.getWorkspace()).toString());
+			return processgroup();
 		}
+
+		// if (moduleGroups == null) {
+		// return ResponseEntity.ok()
+		// .contentType(MediaType.APPLICATION_JSON)
+		// .body(JSONWriter.getModulesJSON(modules,
+		// cloudWorkspace.getWorkspace()).toString());
+		// } else {
+		// if (moduleGroups.hasPreprocessingGroup())
+		// moduleGroups.getPreprocessingGroup().execute(modules, workspace);
+
+		// return ResponseEntity.ok()
+		// .contentType(MediaType.APPLICATION_JSON)
+		// .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
+		// cloudWorkspace.getWorkspace()).toString());
+		// }
 	}
 
 	@MessageMapping("/process")
@@ -123,7 +136,7 @@ public class ProcessController {
 	}
 
 	@MessageMapping("/setparameter")
-	@SendToUser("/queue/parameters")
+	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> setparameter(SetParameterRequest request) throws Exception {
 		Modules modules = cloudModules.getModules();
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
@@ -135,26 +148,35 @@ public class ProcessController {
 					parameter.setValueFromString(request.getParameterValue());
 				} else {
 					ParameterGroup parentGroup = module.getParameter(request.getParentGroupName());
-					Parameter parameter = parentGroup.getCollections(true).get(request.getGroupCollectionNumber()).getParameter(request.getParameterName());
+					Parameter parameter = parentGroup.getCollections(true).get(request.getGroupCollectionNumber())
+							.getParameter(request.getParameterName());
 					parameter.setValueFromString(request.getParameterValue());
 				}
-				
+
 				break;
 			}
 		}
 
 		// Runtime runtime = Runtime.getRuntime();
-		// System.out.println("Memory used = "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users "+CloudWorkspace.getWorkspaceCount());
+		// System.out.println("Memory used =
+		// "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users
+		// "+CloudWorkspace.getWorkspaceCount());
+
+		// if (moduleGroups == null)
+		// return ResponseEntity.ok()
+		// .contentType(MediaType.APPLICATION_JSON)
+		// .body(JSONWriter.getModulesJSON(modules,
+		// cloudWorkspace.getWorkspace()).toString());
+		// else
+		// return ResponseEntity.ok()
+		// .contentType(MediaType.APPLICATION_JSON)
+		// .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
+		// cloudWorkspace.getWorkspace()).toString());
 
 		if (moduleGroups == null)
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()).toString());
+			return process();
 		else
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
-							cloudWorkspace.getWorkspace()).toString());
+			return processgroup();
 
 	}
 
@@ -182,22 +204,16 @@ public class ProcessController {
 	}
 
 	@MessageMapping("/previousgroup")
-	@SendToUser("/queue/parameters")
+	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> previousgroup() throws Exception {
-		Modules modules = cloudModules.getModules();
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
 		// Move to the previous module group. If not possible, it will return the same
 		// set of modules
 		moduleGroups.previousGroup();
 
-		// Get the first set of modules
-		Modules groupModules = moduleGroups.getCurrentGroup().getModules(modules);
-
 		// Return the parameters for these modules
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(JSONWriter.getModulesJSON(groupModules, cloudWorkspace.getWorkspace()).toString());
+		return processgroup();
 
 	}
 
@@ -207,7 +223,7 @@ public class ProcessController {
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
 		String bodyString = moduleGroups != null ? String.valueOf(moduleGroups.hasPreviousGroup()) : "";
-		
+
 		// Return the parameters for these modules
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_PLAIN)
@@ -216,22 +232,16 @@ public class ProcessController {
 	}
 
 	@MessageMapping("/nextgroup")
-	@SendToUser("/queue/parameters")
+	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> nextgroup() throws Exception {
-		Modules modules = cloudModules.getModules();
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
 		// Move to the next module group. If not possible, it will return the same set
 		// of modules
 		moduleGroups.nextGroup();
 
-		// Get the first set of modules
-		Modules groupModules = moduleGroups.getCurrentGroup().getModules(modules);
-
 		// Return the parameters for these modules
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(JSONWriter.getModulesJSON(groupModules, cloudWorkspace.getWorkspace()).toString());
+		return processgroup();
 
 	}
 
@@ -261,5 +271,6 @@ public class ProcessController {
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_JSON)
 				.body(ProcessResult.getInstance().toString());
+
 	}
 }

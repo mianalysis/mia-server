@@ -41,13 +41,11 @@ public class CloudModules {
     @PostConstruct
     public void init() {
         // Invoked after dependencies injected
-        System.out.println("Creating CloudModules");
     }
 
     @PreDestroy
     public void destroy() {
         // Invoked when the WebSocket session ends
-        System.out.println("Destroying CloudModules");
     }
 
 }

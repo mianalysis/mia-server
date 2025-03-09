@@ -2,6 +2,8 @@ package io.github.mianalysis.miaserver.modules;
 
 import java.util.LinkedHashMap;
 
+import org.jfree.data.json.impl.JSONArray;
+import org.jfree.data.json.impl.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
@@ -18,6 +20,7 @@ import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.parameters.SeparatorP;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 import io.github.mianalysis.mia.object.parameters.text.StringP;
+import io.github.mianalysis.mia.object.parameters.text.TextAreaP;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
@@ -28,13 +31,14 @@ import io.github.mianalysis.mia.object.system.Status;
 import io.github.mianalysis.miaserver.ServerCategories;
 import io.github.mianalysis.miaserver.parameters.InputGraphP;
 import io.github.mianalysis.miaserver.parameters.ParameterP;
+import io.github.mianalysis.miaserver.utils.GraphStore;
 import io.github.mianalysis.miaserver.utils.JSONWriter;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
-public class CompositeMessage extends Module {
+public class CreateMessage extends Module {
 
     public static final String OUTPUT_SEPARATOR = "Message";
 
@@ -70,12 +74,12 @@ public class CompositeMessage extends Module {
         new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
         // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(CompositeMessage.class);
+        AvailableModules.addModuleName(CreateMessage.class);
 
     }
 
-    public CompositeMessage(Modules modules) {
-        super("Composite mesage", modules);
+    public CreateMessage(Modules modules) {
+        super("Create mesage", modules);
     }
 
     @Override
@@ -95,30 +99,37 @@ public class CompositeMessage extends Module {
 
     @Override
     public Status process(Workspace workspace) {
-        StringBuilder sb = new StringBuilder();
+        JSONArray jsonArray = new JSONArray();
 
         LinkedHashMap<Integer, Parameters> collections = parameters.getValue(ADD_OUTPUT, workspace);
         for (Parameters collection : collections.values()) {
+            JSONObject fragment = new JSONObject();
             switch ((String) collection.getValue(OUTPUT_TYPE, workspace)) {
                 case OutputTypes.GRAPH:
                     String inputGraph = collection.getValue(GRAPH, workspace);
-                    sb.append(ProcessResult.getInstance().get(inputGraph));
+                    fragment.put("type", "graph");
+                    fragment.put("data", GraphStore.getGraph(inputGraph));
                     break;
 
                 case OutputTypes.PARAMETER:
                     String selectedModuleID = collection.getValue(MODULE, workspace);
                     String selectedParameterName = collection.getValue(PARAMETER, workspace);
-                    Parameter selectedParameter = modules.getModuleByID(selectedModuleID).getParameter(selectedParameterName);
-                    sb.append(JSONWriter.getParameterJSON(selectedParameter, null, null));
-                    
+                    Parameter selectedParameter = modules.getModuleByID(selectedModuleID)
+                            .getParameter(selectedParameterName);
+                    fragment.put("type", "parameter");
+                    fragment.put("data", JSONWriter.getParameterJSON(selectedParameter, null, null));
+                    break;
+
                 case OutputTypes.TEXT:
                     String text = collection.getValue(TEXT, workspace);
-                    sb.append(text);
+                    fragment.put("type", "text");
+                    fragment.put("data", text);
                     break;
             }
+            jsonArray.add(fragment);
         }
 
-        System.out.println(sb.toString());
+        ProcessResult.getInstance().put("message", jsonArray);
 
         return Status.PASS;
 
@@ -133,7 +144,7 @@ public class CompositeMessage extends Module {
         collection.add(new InputGraphP(GRAPH, this));
         collection.add(new ModuleP(MODULE, this, false));
         collection.add(new ParameterP(PARAMETER, this, "", ""));
-        collection.add(new StringP(TEXT, this));
+        collection.add(new TextAreaP(TEXT, this, true));
 
         parameters.add(new ParameterGroup(ADD_OUTPUT, this, collection, 1, getUpdaterAndGetter()));
 

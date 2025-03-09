@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import io.github.mianalysis.miaserver.utils.ModuleGroups;
 
 import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.object.Workspace;
 
 @Component
 @Scope(scopeName = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -32,13 +31,10 @@ public class CloudModuleGroups {
     @PostConstruct
     public void init() {
         // Invoked after dependencies injected
-        System.out.println("Creating CloudModuleGroups");
     }
 
     @PreDestroy
     public void destroy() {
         // Invoked when the WebSocket session ends
-        System.out.println("Destroying CloudModuleGroups");
     }
-
 }
