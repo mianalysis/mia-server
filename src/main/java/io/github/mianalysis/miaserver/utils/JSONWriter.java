@@ -103,19 +103,19 @@ public class JSONWriter {
 
     }
 
-    public static JSONObject getModulesJSON(Modules modules, Workspace workspace) {
+    public static JSONArray getModulesJSON(Modules modules, Workspace workspace) {
         loadSeparator = new GUISeparator(modules);
-        JSONObject json = new JSONObject();
 
         AnalysisTester.testModule(modules.getInputControl(), modules);
         AnalysisTester.testModule(modules.getOutputControl(), modules);
         AnalysisTester.testModules(modules, workspace, null);
 
+        JSONArray jsonArray = new JSONArray();
+
         // Check if there are no controls to be displayed
         if (!modules.hasVisibleParameters() && !hasClickListener(modules))
-            return json;
+            return jsonArray;
 
-        JSONArray jsonArray = new JSONArray();
         jsonArray.put(getModuleJSON(loadSeparator));
 
         // Only modules below an expanded GUISeparator should be displayed
@@ -162,9 +162,7 @@ public class JSONWriter {
         if (expanded && (outputControl.hasVisibleParameters() || outputControl.canBeDisabled()))
             jsonArray.put(getModuleJSON(outputControl));
 
-        json.put("modules", jsonArray);
-
-        return json;
+        return jsonArray;
 
     }
 

@@ -46,7 +46,7 @@ public class DisplayMessage extends Module {
 
     public DisplayMessage(Modules modules) {
         // The first argument is the name by which the module will be seen in the GUI.
-        super("Display mesage", modules);
+        super("Display message", modules);
     }
 
     @Override

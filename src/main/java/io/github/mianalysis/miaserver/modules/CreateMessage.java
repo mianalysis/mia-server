@@ -80,7 +80,7 @@ public class CreateMessage extends Module {
     }
 
     public CreateMessage(Modules modules) {
-        super("Create mesage", modules);
+        super("Create message", modules);
     }
 
     @Override
@@ -113,12 +113,17 @@ public class CreateMessage extends Module {
                 //     break;
 
                 case OutputTypes.PARAMETER:
-                    String selectedModuleID = collection.getValue(MODULE, workspace);
-                    String selectedParameterName = collection.getValue(PARAMETER, workspace);
-                    Parameter selectedParameter = modules.getModuleByID(selectedModuleID)
-                            .getParameter(selectedParameterName);
+                    // String selectedModuleID = collection.getValue(MODULE, workspace);
+                    // String selectedParameterName = collection.getValue(PARAMETER, workspace);
+
+                    // Parameter selectedParameter = modules.getModuleByID(selectedModuleID)
+                    //         .getParameter(selectedParameterName);
+                    ParameterP selectedParameterParameter = (ParameterP) collection.get(PARAMETER);
+                    Parameter selectedParameter = selectedParameterParameter.getSelectedParameter();
+                    Parameter parentGroup = selectedParameterParameter.getParentGroup();
+                    Integer groupCollectionNumber = selectedParameterParameter.getGroupCollectionNumber();
                     fragment.put("type", "parameter");
-                    fragment.put("data", JSONWriter.getParameterJSON(selectedParameter, null, null));
+                    fragment.put("data", JSONWriter.getParameterJSON(selectedParameter, parentGroup, groupCollectionNumber));
                     break;
 
                 case OutputTypes.TEXT:

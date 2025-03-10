@@ -86,6 +86,7 @@ public class ProcessController {
 		Modules modules = cloudModules.getModules();
 
 		ProcessResult.getInstance().clear();
+		ProcessResult.getInstance().put("modules", JSONWriter.getModulesJSON(modules,cloudWorkspace.getWorkspace()));
 		modules.execute(cloudWorkspace.getWorkspace());
 
 		return ResponseEntity.ok()
@@ -100,6 +101,7 @@ public class ProcessController {
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
 		ProcessResult.getInstance().clear();
+		ProcessResult.getInstance().put("modules", JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),cloudWorkspace.getWorkspace()));
 		moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
 
 		return ResponseEntity.ok()
