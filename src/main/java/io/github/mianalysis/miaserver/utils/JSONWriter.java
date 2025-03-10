@@ -2,7 +2,11 @@ package io.github.mianalysis.miaserver.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -65,6 +69,18 @@ public class JSONWriter {
             displayName = displayName.replace(".mia", "");
         jsonObject.put("displayname", displayName);
         jsonObject.put("thumbnail", getThumbnailPNGString(workflowFile));
+
+        String bannerText = "";
+        File bannerFile = new File(workflowFile.getParentFile().getParent() + "/banners/"
+                + FilenameUtils.getBaseName(workflowFile.getName()) + ".txt");
+        if (bannerFile.exists())
+            try {
+                bannerText = Files.readAllLines(Paths.get(bannerFile.toURI())).get(0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        jsonObject.put("bannertext", bannerText);
 
         return jsonObject;
 
