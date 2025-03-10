@@ -56,7 +56,6 @@ public class ProcessController {
 	}
 
 	@MessageMapping("/setworkflow")
-	// @SendToUser("/queue/parameters")
 	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> setworkflow(SetWorkflowRequest request) throws Exception {
 		String workflowPath = "src/main/resources/mia/workflows/" + request.getWorkflowName() + ".mia";
@@ -79,21 +78,6 @@ public class ProcessController {
 
 			return processgroup();
 		}
-
-		// if (moduleGroups == null) {
-		// return ResponseEntity.ok()
-		// .contentType(MediaType.APPLICATION_JSON)
-		// .body(JSONWriter.getModulesJSON(modules,
-		// cloudWorkspace.getWorkspace()).toString());
-		// } else {
-		// if (moduleGroups.hasPreprocessingGroup())
-		// moduleGroups.getPreprocessingGroup().execute(modules, workspace);
-
-		// return ResponseEntity.ok()
-		// .contentType(MediaType.APPLICATION_JSON)
-		// .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
-		// cloudWorkspace.getWorkspace()).toString());
-		// }
 	}
 
 	@MessageMapping("/process")
@@ -109,29 +93,18 @@ public class ProcessController {
 				.body(ProcessResult.getInstance().toString());
 	}
 
-	// @MessageMapping("/getimage")
-	// @SendToUser("/queue/image")
-	// public @ResponseBody ResponseEntity<byte[]> getimage() throws Exception {
-	// return ResponseEntity.ok()
-	// .contentType(MediaType.IMAGE_PNG)
-	// .body(ProcessResult.getImage());
-	// }
-
-	@MessageMapping("/getparameters")
-	@SendToUser("/queue/parameters")
-	public @ResponseBody ResponseEntity<String> getparameters() throws Exception {
+	@MessageMapping("/processgroup")
+	@SendToUser("/queue/result")
+	public @ResponseBody ResponseEntity<String> processgroup() throws Exception {
 		Modules modules = cloudModules.getModules();
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-		if (moduleGroups == null)
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()).toString());
-		else
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_JSON)
-					.body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
-							cloudWorkspace.getWorkspace()).toString());
+		ProcessResult.getInstance().clear();
+		moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
+
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(ProcessResult.getInstance().toString());
 
 	}
 
@@ -177,29 +150,6 @@ public class ProcessController {
 			return process();
 		else
 			return processgroup();
-
-	}
-
-	@MessageMapping("/enablemodulegroups")
-	@SendToUser("/queue/parameters")
-	public @ResponseBody ResponseEntity<String> enablemodulegroups() throws Exception {
-		Modules modules = cloudModules.getModules();
-		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
-
-		moduleGroups = new ModuleGroups(modules);
-
-		// If pre-processing modules are present, run these first (these are modules
-		// before the first GUISeparator)
-		if (moduleGroups.hasPreprocessingGroup())
-			moduleGroups.getPreprocessingGroup().execute(modules, cloudWorkspace.getWorkspace());
-
-		// Get the first set of modules
-		Modules groupModules = moduleGroups.getCurrentGroup().getModules(modules);
-
-		// Return the parameters for these modules
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(JSONWriter.getModulesJSON(groupModules, cloudWorkspace.getWorkspace()).toString());
 
 	}
 
@@ -256,21 +206,6 @@ public class ProcessController {
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_PLAIN)
 				.body(bodyString);
-
-	}
-
-	@MessageMapping("/processgroup")
-	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<String> processgroup() throws Exception {
-		Modules modules = cloudModules.getModules();
-		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
-
-		ProcessResult.getInstance().clear();
-		moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
-
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(ProcessResult.getInstance().toString());
 
 	}
 }

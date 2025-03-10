@@ -31,7 +31,7 @@ import io.github.mianalysis.mia.object.system.Status;
 import io.github.mianalysis.miaserver.ServerCategories;
 import io.github.mianalysis.miaserver.parameters.InputGraphP;
 import io.github.mianalysis.miaserver.parameters.ParameterP;
-import io.github.mianalysis.miaserver.utils.GraphStore;
+// import io.github.mianalysis.miaserver.utils.GraphStore;
 import io.github.mianalysis.miaserver.utils.JSONWriter;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
@@ -55,11 +55,12 @@ public class CreateMessage extends Module {
     public static final String TEXT = "Text to display";
 
     public interface OutputTypes {
-        String GRAPH = "Graph";
+        // String GRAPH = "Graph";
         String PARAMETER = "Parameter";
         String TEXT = "Text";
 
-        String[] ALL = new String[] { GRAPH, PARAMETER, TEXT };
+        // String[] ALL = new String[] { GRAPH, PARAMETER, TEXT };
+        String[] ALL = new String[] { PARAMETER, TEXT };
 
     }
 
@@ -105,11 +106,11 @@ public class CreateMessage extends Module {
         for (Parameters collection : collections.values()) {
             JSONObject fragment = new JSONObject();
             switch ((String) collection.getValue(OUTPUT_TYPE, workspace)) {
-                case OutputTypes.GRAPH:
-                    String inputGraph = collection.getValue(GRAPH, workspace);
-                    fragment.put("type", "graph");
-                    fragment.put("data", GraphStore.getGraph(inputGraph));
-                    break;
+                // case OutputTypes.GRAPH:
+                //     String inputGraph = collection.getValue(GRAPH, workspace);
+                //     fragment.put("type", "graph");
+                //     fragment.put("data", GraphStore.getGraph(inputGraph));
+                //     break;
 
                 case OutputTypes.PARAMETER:
                     String selectedModuleID = collection.getValue(MODULE, workspace);
@@ -205,9 +206,9 @@ public class CreateMessage extends Module {
 
                 returnedParameters.add(params.getParameter(OUTPUT_TYPE));
                 switch ((String) params.getValue(OUTPUT_TYPE, null)) {
-                    case OutputTypes.GRAPH:
-                        returnedParameters.add(params.getParameter(GRAPH));
-                        break;
+                    // case OutputTypes.GRAPH:
+                    //     returnedParameters.add(params.getParameter(GRAPH));
+                    //     break;
                     case OutputTypes.PARAMETER:
                         returnedParameters.add(params.getParameter(MODULE));
                         returnedParameters.add(params.getParameter(PARAMETER));
