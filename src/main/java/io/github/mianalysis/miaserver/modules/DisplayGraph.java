@@ -218,7 +218,8 @@ public class DisplayGraph extends Module {
 
             int i = 0;
             for (Obj obj : objs.values()) {
-                io.github.mianalysis.mia.object.measurements.Measurement measurement = obj.getMeasurement(measurementName);
+                io.github.mianalysis.mia.object.measurements.Measurement measurement = obj
+                        .getMeasurement(measurementName);
                 if (measurement == null) {
                     data[i] = Double.NaN;
                 } else {
@@ -288,6 +289,10 @@ public class DisplayGraph extends Module {
             default:
                 graphJSON = getChannelComponentsJSON();
                 graphJSON.put("type", graphType.toLowerCase());
+                graphJSON.put("showXAxis", false);
+                graphJSON.put("showYAxis", false);
+                graphJSON.put("showXGrid", false);
+                graphJSON.put("showYGrid", false);
                 break;
             case GraphSources.IMAGE_INTENSITY_HISTOGRAM:
                 graphJSON = getImageIntensityHistogramJSON();

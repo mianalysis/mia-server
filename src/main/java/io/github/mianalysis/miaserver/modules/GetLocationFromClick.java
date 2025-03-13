@@ -100,6 +100,10 @@ public class GetLocationFromClick extends Module {
             } catch (NumberFormatException | PointOutOfRangeException e) {
                 MIA.log.writeError(e);
             }
+
+            // Resetting value else it can be picked up when going back to this module
+            parameters.get(LOCATION).setValueFromString("");
+
         }
 
         workspace.addObjects(outputLocations);
