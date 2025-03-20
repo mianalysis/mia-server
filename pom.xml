@@ -62,25 +62,25 @@
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-core</artifactId>
-			<version>1.7.5</version>
+			<version>1.7.7-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-modules</artifactId>
-			<version>1.7.5</version>
+			<version>1.7.7-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-plugin</artifactId>
-			<version>1.7.5</version>
+			<version>1.7.7-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-samj</artifactId>
-			<version>1.7.5</version>
+			<version>1.7.7-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
