@@ -70,17 +70,18 @@ public class JSONWriter {
         jsonObject.put("displayname", displayName);
         jsonObject.put("thumbnail", getThumbnailPNGString(workflowFile));
 
-        String bannerText = "";
+        JSONObject bannerJson = new JSONObject();
         File bannerFile = new File(workflowFile.getParentFile().getParent() + "/banners/"
-                + FilenameUtils.getBaseName(workflowFile.getName()) + ".txt");
+                + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
         if (bannerFile.exists())
             try {
-                bannerText = Files.readAllLines(Paths.get(bannerFile.toURI())).get(0);
+                String jsonString = new String(Files.readAllBytes(Paths.get(bannerFile.toURI())));
+                bannerJson = new JSONObject(jsonString);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-        jsonObject.put("bannertext", bannerText);
+        jsonObject.put("banner", bannerJson);
 
         return jsonObject;
 
