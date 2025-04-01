@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+
+/appose_x86_64/
