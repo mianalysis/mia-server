@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -84,9 +85,13 @@ public class ProcessController {
 	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> process() throws Exception {
 		Modules modules = cloudModules.getModules();
+		File workflowFile = new File(modules.getAnalysisFilename());
 
 		ProcessResult.getInstance().clear();
 		ProcessResult.getInstance().put("modules", JSONWriter.getModulesJSON(modules,cloudWorkspace.getWorkspace()));
+		File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
+                + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
+		ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
 		modules.execute(cloudWorkspace.getWorkspace());
 
 		return ResponseEntity.ok()
@@ -99,9 +104,13 @@ public class ProcessController {
 	public @ResponseBody ResponseEntity<String> processgroup() throws Exception {
 		Modules modules = cloudModules.getModules();
 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+		File workflowFile = new File(modules.getAnalysisFilename());
 
 		ProcessResult.getInstance().clear();
 		ProcessResult.getInstance().put("modules", JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),cloudWorkspace.getWorkspace()));
+		File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
+                + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
+		ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
 		moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
 
 		return ResponseEntity.ok()

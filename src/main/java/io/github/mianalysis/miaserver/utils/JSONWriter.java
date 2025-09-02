@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.drew.lang.annotations.Nullable;
+import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -70,18 +71,30 @@ public class JSONWriter {
         jsonObject.put("displayname", displayName);
         jsonObject.put("thumbnail", getThumbnailPNGString(workflowFile));
 
-        JSONObject bannerJson = new JSONObject();
-        File bannerFile = new File(workflowFile.getParentFile().getParent() + "/banners/"
+        File bannerFile = new File(workflowFile.getParentFile().getParent() + "/banner/"
                 + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-        if (bannerFile.exists())
+        JSONObject bannerJson = getJSONFromFile(bannerFile);
+        jsonObject.put("banner", bannerJson);
+
+        File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
+                + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
+        JSONObject backgroundJson = getJSONFromFile(backgroundFile);
+        jsonObject.put("background", backgroundJson);
+
+        return jsonObject;
+
+    }
+
+    public static JSONObject getJSONFromFile(File jsonFile) {
+        JSONObject jsonObject = new JSONObject();
+        
+        if (jsonFile.exists())
             try {
-                String jsonString = new String(Files.readAllBytes(Paths.get(bannerFile.toURI())));
-                bannerJson = new JSONObject(jsonString);
+                String jsonString = new String(Files.readAllBytes(Paths.get(jsonFile.toURI())));
+                jsonObject = new JSONObject(jsonString);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-        jsonObject.put("banner", bannerJson);
 
         return jsonObject;
 
@@ -90,6 +103,11 @@ public class JSONWriter {
     public static String getThumbnailPNGString(File workflowFile) {
         String thumbnailName = workflowFile.getParentFile().getParent() + "/thumbnails/"
                 + FilenameUtils.getBaseName(workflowFile.getName()) + ".png";
+        if (!new File(thumbnailName).exists()) {
+            System.err.println("ERROR: Thumbnail not found for " + workflowFile.getName());
+            return "data:image/png;base64,";
+        }
+
         ImagePlus ipl = IJ.openImage(thumbnailName);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
