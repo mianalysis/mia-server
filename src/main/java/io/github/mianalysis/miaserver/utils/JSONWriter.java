@@ -2,8 +2,6 @@ package io.github.mianalysis.miaserver.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,7 +17,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.drew.lang.annotations.Nullable;
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -57,18 +54,29 @@ public class JSONWriter {
 
     }
 
-    public static JSONObject getWorkflowJSON(File workflowFile) {
-        JSONObject jsonObject = new JSONObject();
-
+    public static String getWorkflowFullName(File workflowFile) {
         String fullName = workflowFile.getName();
         if (fullName.endsWith(".mia"))
             fullName = fullName.replace(".mia", "");
-        jsonObject.put("fullname", fullName);
 
+        return fullName;
+
+    }
+
+    public static String getWorkflowDisplayName(File workflowFile) {
         String displayName = workflowFile.getName().replace("$Q", "?").replace("_", " ");
         if (displayName.endsWith(".mia"))
             displayName = displayName.replace(".mia", "");
-        jsonObject.put("displayname", displayName);
+
+        return displayName;
+
+    }
+
+    public static JSONObject getWorkflowJSON(File workflowFile) {
+        JSONObject jsonObject = new JSONObject();
+        
+        jsonObject.put("fullname", getWorkflowFullName(workflowFile));
+        jsonObject.put("displayname", getWorkflowDisplayName(workflowFile));
         jsonObject.put("thumbnail", getThumbnailPNGString(workflowFile));
 
         File bannerFile = new File(workflowFile.getParentFile().getParent() + "/banner/"
@@ -76,18 +84,13 @@ public class JSONWriter {
         JSONObject bannerJson = getJSONFromFile(bannerFile);
         jsonObject.put("banner", bannerJson);
 
-        File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-                + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-        JSONObject backgroundJson = getJSONFromFile(backgroundFile);
-        jsonObject.put("background", backgroundJson);
-
         return jsonObject;
 
     }
 
     public static JSONObject getJSONFromFile(File jsonFile) {
         JSONObject jsonObject = new JSONObject();
-        
+
         if (jsonFile.exists())
             try {
                 String jsonString = new String(Files.readAllBytes(Paths.get(jsonFile.toURI())));

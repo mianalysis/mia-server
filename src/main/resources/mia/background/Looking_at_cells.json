@@ -1,0 +1,8 @@
+{
+    "colour": "#E7A5F6",
+    "iconPaths": [
+        "images/background/circle.png",
+        "images/background/cell.png",
+        "images/background/microscope.png"
+    ]
+}
