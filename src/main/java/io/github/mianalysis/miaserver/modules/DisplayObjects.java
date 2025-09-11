@@ -17,9 +17,11 @@ import io.github.mianalysis.mia.module.visualise.overlays.AbstractOverlay;
 import io.github.mianalysis.mia.object.Obj;
 import io.github.mianalysis.mia.object.Objs;
 import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.parameters.ChoiceP;
 import io.github.mianalysis.mia.object.parameters.InputObjectsP;
 import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.parameters.SeparatorP;
+import io.github.mianalysis.mia.object.parameters.text.IntegerP;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
@@ -34,13 +36,25 @@ import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
-public class DisplayOverlay extends AbstractOverlay {
+public class DisplayObjects extends AbstractOverlay {
 
     public static final String INPUT_SEPARATOR = "Object input";
 
     public static final String INPUT_OBJECTS = "Objects to display";
 
     public static final String RENDERING_SEPARATOR = "Rendering controls";
+
+    public static final String RENDERING_MODE = "Rendering mode";
+
+    public static final String LINE_WIDTH = "Line width";
+
+    public interface RenderingModes {
+        String FILL = "Fill";
+        String OUTLINE = "Outline";
+
+        String[] ALL = new String[] { FILL, OUTLINE };
+
+    }
 
     public interface ColourModes extends AbstractOverlay.ColourModes {
     }
@@ -59,11 +73,12 @@ public class DisplayOverlay extends AbstractOverlay {
         new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
         // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(DisplayOverlay.class);
+        AvailableModules.addModuleName(DisplayObjects.class);
 
     }
 
-    public static JSONObject getOverlayJSON(Objs inputObjects, HashMap<Integer, Color> colours)
+    public static JSONObject getOverlayJSON(Objs inputObjects, HashMap<Integer, Color> colours, String renderingMode,
+            int lineWidth)
             throws InterruptedException {
         JSONObject overlayJSON = new JSONObject();
 
@@ -78,10 +93,13 @@ public class DisplayOverlay extends AbstractOverlay {
             objectOverlayJSON.put("n", polygon.npoints);
 
             Color colour = colours.get(inputObject.getID());
+
             String hex = String.format("#%02x%02x%02x%02x", colour.getRed(), colour.getGreen(), colour.getBlue(),
                     colour.getAlpha());
             objectOverlayJSON.put("fillcolour", hex);
             objectOverlayJSON.put("strokecolour", hex);
+            objectOverlayJSON.put("renderingmode", renderingMode);
+            objectOverlayJSON.put("linewidth", String.valueOf(lineWidth));
 
             regionsJSONArray.put(objectOverlayJSON);
 
@@ -93,7 +111,7 @@ public class DisplayOverlay extends AbstractOverlay {
 
     }
 
-    public DisplayOverlay(Modules modules) {
+    public DisplayObjects(Modules modules) {
         // The first argument is the name by which the module will be seen in the GUI.
         super("Display objects", modules);
     }
@@ -116,6 +134,8 @@ public class DisplayOverlay extends AbstractOverlay {
     @Override
     public Status process(Workspace workspace) {
         String objectsName = parameters.getValue(INPUT_OBJECTS, workspace);
+        String renderingMode = parameters.getValue(RENDERING_MODE, workspace);
+        int lineWidth = parameters.getValue(LINE_WIDTH, workspace);
 
         Objs inputObjects = workspace.getObjects(objectsName);
 
@@ -123,13 +143,13 @@ public class DisplayOverlay extends AbstractOverlay {
 
         try {
             ProcessResult processResult = ProcessResult.getInstance();
-            JSONObject overlayJSON = getOverlayJSON(inputObjects, colours);
-            
+            JSONObject overlayJSON = getOverlayJSON(inputObjects, colours, renderingMode, lineWidth);
+
             if (!processResult.has("overlays"))
                 processResult.put("overlays", new JSONArray());
 
             ((JSONArray) processResult.get("overlays")).put(overlayJSON);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -148,6 +168,10 @@ public class DisplayOverlay extends AbstractOverlay {
         parameters.add(new SeparatorP(INPUT_SEPARATOR, this));
         parameters.add(new InputObjectsP(INPUT_OBJECTS, this));
 
+        parameters.add(new SeparatorP(RENDERING_SEPARATOR, this));
+        parameters.add(new ChoiceP(RENDERING_MODE, this, RenderingModes.FILL, RenderingModes.ALL));
+        parameters.add(new IntegerP(LINE_WIDTH, this, 1));
+
     }
 
     @Override
@@ -156,6 +180,15 @@ public class DisplayOverlay extends AbstractOverlay {
 
         returnedParameters.add(parameters.getParameter(INPUT_SEPARATOR));
         returnedParameters.add(parameters.getParameter(INPUT_OBJECTS));
+
+        returnedParameters.add(parameters.getParameter(RENDERING_SEPARATOR));
+        returnedParameters.add(parameters.getParameter(RENDERING_MODE));
+
+        switch ((String) parameters.getValue(RENDERING_MODE, null)) {
+            case RenderingModes.OUTLINE:
+                returnedParameters.add(parameters.getParameter(LINE_WIDTH));
+                break;
+        }
 
         String inputObjectsName = parameters.getValue(INPUT_OBJECTS, null);
         returnedParameters.addAll(super.updateAndGetParameters(inputObjectsName));

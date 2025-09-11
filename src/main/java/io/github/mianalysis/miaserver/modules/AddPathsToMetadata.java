@@ -60,13 +60,28 @@ public class AddPathsToMetadata extends GlobalVariables {
 
     @Override
     public Status process(Workspace workspace) {
+        String workflowPath = modules.getAnalysisFilename();
+
+        File workflowFile = new File(workflowPath);
+        if (!workflowFile.exists())
+            return Status.PASS;
+
+        String workflowName = workflowFile.getName();
+        if (workflowName.endsWith("mia"))
+            workflowName = workflowName.substring(0, workflowName.length() - 4);
+
+        String miaFolder = workflowFile.getParentFile().getParent();
+        workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
+        workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
+        workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
+
         return Status.PASS;
 
     }
 
     @Override
     protected void initialiseParameters() {
-        parameters.add(new MessageP(MESSAGE, this, "This module has no parameters", ParameterState.MESSAGE));
+        parameters.add(new MessageP(MESSAGE, this, "This module automatically adds the following metadata and global variable values:\r\n    - ImagesPath\r\n    - ThumbnailsPath\r\n    - WorkflowName\r\n    - WorkflowPath", ParameterState.MESSAGE,128));
     }
 
     @Override
