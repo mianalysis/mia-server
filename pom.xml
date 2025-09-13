@@ -70,7 +70,7 @@
 			<artifactId>mia-modules</artifactId>
 			<version>1.7.16</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-plugin</artifactId>

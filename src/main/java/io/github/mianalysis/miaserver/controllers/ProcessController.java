@@ -13,6 +13,13 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import io.github.mianalysis.mia.module.Module;
+import io.github.mianalysis.mia.module.Modules;
+import io.github.mianalysis.mia.module.core.InputControl;
+import io.github.mianalysis.mia.module.system.GlobalVariables;
+import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.parameters.ParameterGroup;
+import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 import io.github.mianalysis.miaserver.beans.CloudModuleGroups;
 import io.github.mianalysis.miaserver.beans.CloudModules;
 import io.github.mianalysis.miaserver.beans.CloudWorkspace;
@@ -21,14 +28,6 @@ import io.github.mianalysis.miaserver.requests.SetWorkflowRequest;
 import io.github.mianalysis.miaserver.utils.JSONWriter;
 import io.github.mianalysis.miaserver.utils.ModuleGroups;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
-import io.github.mianalysis.mia.MIA;
-import io.github.mianalysis.mia.module.Module;
-import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.module.core.InputControl;
-import io.github.mianalysis.mia.module.system.GlobalVariables;
-import io.github.mianalysis.mia.object.Workspace;
-import io.github.mianalysis.mia.object.parameters.ParameterGroup;
-import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 
 @Controller
 public class ProcessController {
