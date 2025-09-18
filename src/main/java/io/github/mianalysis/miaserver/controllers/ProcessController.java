@@ -40,6 +40,8 @@ public class ProcessController {
 	@Autowired
 	private CloudModuleGroups cloudModuleGroups;
 
+	private boolean processActive = false;
+
 	// @Resource(name = "getModules")
 	// private Modules modules;
 
@@ -49,8 +51,7 @@ public class ProcessController {
 		String workflowsPath = "src/main/resources/mia/workflows/";
 		Collection<File> workflowFiles = FileUtils.listFiles(new File(workflowsPath), new String[] { "mia" }, false);
 
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON)
+		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
 				.body(JSONWriter.getWorkflowsJSON(workflowFiles).toString());
 
 	}
@@ -83,42 +84,66 @@ public class ProcessController {
 	@MessageMapping("/process")
 	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> process() throws Exception {
-		Modules modules = cloudModules.getModules();
-		File workflowFile = new File(modules.getAnalysisFilename());
+		if (processActive)
+			return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+					.body("busy");
 
-		ProcessResult.getInstance().clear();
-		ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
-		ProcessResult.getInstance().put("modules", JSONWriter.getModulesJSON(modules,cloudWorkspace.getWorkspace()));
-		File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-                + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-		ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
-		modules.execute(cloudWorkspace.getWorkspace());
+		try {
+			processActive = true;
+			Modules modules = cloudModules.getModules();
+			File workflowFile = new File(modules.getAnalysisFilename());
 
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(ProcessResult.getInstance().toString());
+			ProcessResult.getInstance().clear();
+			ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
+			ProcessResult.getInstance().put("modules",
+					JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()));
+			File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
+					+ FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
+			ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
+			modules.execute(cloudWorkspace.getWorkspace());
+
+			processActive = false;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			processActive = false;
+		}
+
+		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ProcessResult.getInstance().toString());
 	}
 
 	@MessageMapping("/processgroup")
 	@SendToUser("/queue/result")
 	public @ResponseBody ResponseEntity<String> processgroup() throws Exception {
-		Modules modules = cloudModules.getModules();
-		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
-		File workflowFile = new File(modules.getAnalysisFilename());
+		if (processActive)
+			return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("busy");
 
-		ProcessResult.getInstance().clear();
-		ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
-		ProcessResult.getInstance().put("modules", JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),cloudWorkspace.getWorkspace()));
+		try {
+			processActive = true;
 
-		File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-                + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-		ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
-		
-		moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
+			Modules modules = cloudModules.getModules();
+			ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+			File workflowFile = new File(modules.getAnalysisFilename());
 
-		return ResponseEntity.ok()
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(ProcessResult.getInstance().toString());
+			ProcessResult.getInstance().clear();
+			ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
+			ProcessResult.getInstance().put("modules", JSONWriter
+					.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace()));
+
+			File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
+					+ FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
+			ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
+
+			moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
+
+			processActive = false;
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			processActive = false;
+		}
+
+		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ProcessResult.getInstance().toString());
 
 	}
 
@@ -217,9 +242,7 @@ public class ProcessController {
 		String bodyString = moduleGroups != null ? String.valueOf(moduleGroups.hasNextGroup()) : "";
 
 		// Return the parameters for these modules
-		return ResponseEntity.ok()
-				.contentType(MediaType.TEXT_PLAIN)
-				.body(bodyString);
+		return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(bodyString);
 
 	}
 }
