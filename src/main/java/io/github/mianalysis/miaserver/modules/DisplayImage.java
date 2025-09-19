@@ -2,10 +2,7 @@ package io.github.mianalysis.miaserver.modules;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
@@ -19,6 +16,7 @@ import ij.ImagePlus;
 import ij.plugin.ChannelSplitter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
+import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.AvailableModules;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
@@ -49,6 +47,8 @@ public class DisplayImage extends Module {
 
     public static final String SHOW_CHANNEL_CONTROLS = "Show channel controls";
 
+    public static final String SHOW_ZOOM_CONTROL = "Show zoom control";
+
     public interface Types {
         String COLOUR = "Colour";
         String COMPOSITE = "Composite";
@@ -71,10 +71,11 @@ public class DisplayImage extends Module {
 
     }
 
-    public static JSONObject getImageJSON(Image image, boolean showImageControls) throws InterruptedException {
+    public static JSONObject getImageJSON(Image image, boolean showChannelControls, boolean showZoomControl) throws InterruptedException {
         JSONObject imageJSON = new JSONObject();
         imageJSON.put("name", image.getName());
-        imageJSON.put("showcontrols", showImageControls);
+        imageJSON.put("showchannelcontrols", showChannelControls);
+        imageJSON.put("showzoomcontrol", showZoomControl);
 
         JSONArray channelArray = new JSONArray();
 
@@ -125,7 +126,7 @@ public class DisplayImage extends Module {
             ImagePlus overlayIpl = blankIpl.flatten();
 
             JSONObject channelObject = new JSONObject();
-            
+
             // Adding pixel information
             ipr = overlayIpl.getProcessor();
             channelObject.put("pixels", getChannelString(ipr));
@@ -192,7 +193,8 @@ public class DisplayImage extends Module {
     @Override
     public Status process(Workspace workspace) {
         String imageName = parameters.getValue(IMAGE, workspace);
-        boolean showImageControls = parameters.getValue(SHOW_CHANNEL_CONTROLS, workspace);
+        boolean showChannelControls = parameters.getValue(SHOW_CHANNEL_CONTROLS, workspace);
+        boolean showZoomControl = parameters.getValue(SHOW_ZOOM_CONTROL, workspace);
 
         Image image = workspace.getImage(imageName);
 
@@ -209,7 +211,8 @@ public class DisplayImage extends Module {
             if (workspace.getMetadata().get("ImageHash").equals(hash)) {
                 JSONObject imageJSON = new JSONObject();
                 imageJSON.put("name", image.getName());
-                imageJSON.put("showcontrols", showImageControls);
+                imageJSON.put("showchannelcontrols", showChannelControls);
+                imageJSON.put("showzoomcontrol", showZoomControl);
                 imageJSON.put("hashcode", hash);
                 imageJSON.put("channels", new JSONObject());
 
@@ -225,7 +228,7 @@ public class DisplayImage extends Module {
 
         // Otherwise, proceed as usual
         try {
-            JSONObject imageJSON = getImageJSON(image, showImageControls);
+            JSONObject imageJSON = getImageJSON(image, showChannelControls, showZoomControl);
             imageJSON.put("hashcode", hash);
             workspace.getMetadata().put("ImageHash", hash);
             ProcessResult.getInstance().put("image", imageJSON);
@@ -244,6 +247,8 @@ public class DisplayImage extends Module {
     protected void initialiseParameters() {
         parameters.add(new InputImageP(IMAGE, this));
         parameters.add(new BooleanP(SHOW_CHANNEL_CONTROLS, this, false));
+        parameters.add(new BooleanP(SHOW_ZOOM_CONTROL, this, false));
+
     }
 
     @Override
