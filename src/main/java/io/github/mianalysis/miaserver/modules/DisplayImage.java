@@ -16,7 +16,6 @@ import ij.ImagePlus;
 import ij.plugin.ChannelSplitter;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
-import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.AvailableModules;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
@@ -24,6 +23,7 @@ import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.image.Image;
 import io.github.mianalysis.mia.object.parameters.BooleanP;
+import io.github.mianalysis.mia.object.parameters.ChoiceP;
 import io.github.mianalysis.mia.object.parameters.InputImageP;
 import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
@@ -47,13 +47,29 @@ public class DisplayImage extends Module {
 
     public static final String SHOW_CHANNEL_CONTROLS = "Show channel controls";
 
+    public static final String SHOW_PROBE_CONTROL = "Show probe control";
+
+    public static final String SHOW_SELECT_CONTROL = "Show select control";
+
     public static final String SHOW_ZOOM_CONTROL = "Show zoom control";
+
+    public static final String DEFAULT_CONTROl = "Default control";
+
 
     public interface Types {
         String COLOUR = "Colour";
         String COMPOSITE = "Composite";
 
         String[] ALL = new String[] { COLOUR, COMPOSITE };
+    }
+
+    public interface DefaultControls {
+        String MOVE = "Move";
+        String PROBE = "Probe";
+        String SELECT = "Select";        
+
+        String[] ALL = new String[]{MOVE, PROBE,SELECT};
+
     }
 
     public static void main(String[] args) {
@@ -71,11 +87,29 @@ public class DisplayImage extends Module {
 
     }
 
-    public static JSONObject getImageJSON(Image image, boolean showChannelControls, boolean showZoomControl) throws InterruptedException {
+    public JSONObject getCoreImageJSON(int hash, Workspace workspace) {
+        String imageName = parameters.getValue(IMAGE, workspace);
+        boolean showChannelControls = parameters.getValue(SHOW_CHANNEL_CONTROLS, workspace);
+        boolean showProbeControl = parameters.getValue(SHOW_PROBE_CONTROL, workspace);
+        boolean showSelectControl = parameters.getValue(SHOW_SELECT_CONTROL, workspace);
+        boolean showZoomControl = parameters.getValue(SHOW_ZOOM_CONTROL, workspace);
+        String defaultControl = parameters.getValue(DEFAULT_CONTROl, workspace);
+
         JSONObject imageJSON = new JSONObject();
-        imageJSON.put("name", image.getName());
+        imageJSON.put("name", imageName);
+        imageJSON.put("hashcode", hash);
         imageJSON.put("showchannelcontrols", showChannelControls);
+        imageJSON.put("showprobecontrol", showProbeControl);
+        imageJSON.put("showselectcontrol", showSelectControl);
         imageJSON.put("showzoomcontrol", showZoomControl);
+        imageJSON.put("defaultcontrol", defaultControl);
+
+        return imageJSON;
+
+    }
+
+    public JSONObject getImageJSON(Image image, int hash, Workspace workspace) throws InterruptedException {
+        JSONObject imageJSON = getCoreImageJSON(hash, workspace);
 
         JSONArray channelArray = new JSONArray();
 
@@ -92,7 +126,6 @@ public class DisplayImage extends Module {
             JSONObject channelObject = new JSONObject();
 
             // Adding pixel information
-            // ipl.setPosition((c + 1), z, t);
             ipr = channels[c].getProcessor();
             channelObject.put("pixels", getChannelString(ipr));
 
@@ -193,8 +226,6 @@ public class DisplayImage extends Module {
     @Override
     public Status process(Workspace workspace) {
         String imageName = parameters.getValue(IMAGE, workspace);
-        boolean showChannelControls = parameters.getValue(SHOW_CHANNEL_CONTROLS, workspace);
-        boolean showZoomControl = parameters.getValue(SHOW_ZOOM_CONTROL, workspace);
 
         Image image = workspace.getImage(imageName);
 
@@ -209,11 +240,7 @@ public class DisplayImage extends Module {
         // pixel information
         if (workspace.getMetadata().containsKey("ImageHash")) {
             if (workspace.getMetadata().get("ImageHash").equals(hash)) {
-                JSONObject imageJSON = new JSONObject();
-                imageJSON.put("name", image.getName());
-                imageJSON.put("showchannelcontrols", showChannelControls);
-                imageJSON.put("showzoomcontrol", showZoomControl);
-                imageJSON.put("hashcode", hash);
+                JSONObject imageJSON = getCoreImageJSON(hash, workspace);
                 imageJSON.put("channels", new JSONObject());
 
                 ProcessResult.getInstance().put("image", imageJSON);
@@ -228,8 +255,7 @@ public class DisplayImage extends Module {
 
         // Otherwise, proceed as usual
         try {
-            JSONObject imageJSON = getImageJSON(image, showChannelControls, showZoomControl);
-            imageJSON.put("hashcode", hash);
+            JSONObject imageJSON = getImageJSON(image, hash, workspace);
             workspace.getMetadata().put("ImageHash", hash);
             ProcessResult.getInstance().put("image", imageJSON);
         } catch (Exception e) {
@@ -247,7 +273,10 @@ public class DisplayImage extends Module {
     protected void initialiseParameters() {
         parameters.add(new InputImageP(IMAGE, this));
         parameters.add(new BooleanP(SHOW_CHANNEL_CONTROLS, this, false));
+        parameters.add(new BooleanP(SHOW_PROBE_CONTROL, this, false));
+        parameters.add(new BooleanP(SHOW_SELECT_CONTROL, this, false));
         parameters.add(new BooleanP(SHOW_ZOOM_CONTROL, this, false));
+        parameters.add(new ChoiceP(DEFAULT_CONTROl, this, DefaultControls.MOVE, DefaultControls.ALL));
 
     }
 
