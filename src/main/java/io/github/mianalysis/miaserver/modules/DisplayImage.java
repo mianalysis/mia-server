@@ -55,7 +55,6 @@ public class DisplayImage extends Module {
 
     public static final String DEFAULT_CONTROl = "Default control";
 
-
     public interface Types {
         String COLOUR = "Colour";
         String COMPOSITE = "Composite";
@@ -66,9 +65,9 @@ public class DisplayImage extends Module {
     public interface DefaultControls {
         String MOVE = "Move";
         String PROBE = "Probe";
-        String SELECT = "Select";        
+        String SELECT = "Select";
 
-        String[] ALL = new String[]{MOVE, PROBE,SELECT};
+        String[] ALL = new String[] { MOVE, PROBE, SELECT };
 
     }
 
@@ -230,11 +229,27 @@ public class DisplayImage extends Module {
         Image image = workspace.getImage(imageName);
 
         ImagePlus ipl = image.getImagePlus();
-        ImageProcessor ipr = ipl.getProcessor();
+
         int hash = 0;
-        for (int x = 0; x < ipl.getWidth(); x++)
-            for (int y = 0; y < ipl.getHeight(); y++)
-                hash = hash * 31 + ipr.get(x, y);
+        for (int c = 0; c < ipl.getNChannels(); c++) {
+            ipl.setC(c + 1);
+
+            ImageProcessor ipr = ipl.getChannelProcessor();
+
+            for (int x = 0; x < ipl.getWidth(); x++)
+                for (int y = 0; y < ipl.getHeight(); y++)
+                    hash = hash * 31 + ipr.get(x, y);
+
+        }
+        
+        // Adding in LUT info
+        for (LUT lut : ipl.getLuts()) {
+            hash = hash * 31 + lut.hashCode();
+
+            for (int i=0;i<256;i++)
+                hash = hash * 31 + lut.getRGB(i)*i;
+            
+        }
 
         // Checking if this hash is already present. If it is, don't bother updating
         // pixel information
