@@ -1,8 +1,13 @@
 package io.github.mianalysis.miaserver.utils;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -12,6 +17,7 @@ import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -35,6 +41,24 @@ import io.github.mianalysis.miaserver.parameters.ClickListenerP;
 
 public class JSONWriter {
     private static GUISeparator loadSeparator;
+
+    public static void main(String[] args) {
+        getAvailableWorkfowsJSON();
+    }
+
+    public static String getAvailableWorkfowsJSON() {
+        String workflowsPath = "mia/workflows/workflows.json";
+        InputStream inputStream = JSONWriter.class.getClassLoader().getResourceAsStream(workflowsPath);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        StringBuilder sb = new StringBuilder();
+        reader.lines().forEach(sb::append);
+        return sb.toString();
+        // return new JSONObject(JSONWriter.class.getClassLoader().getResource(workflowsPath));
+        // return getWorkflowsJSON(workflowFiles);
+        // JSONObject jsonObject = new JSONObject();
+        // jsonObject.put("TEST", "WOOF");
+        // return jsonObject.toString();
+    }
 
     public static JSONObject getWorkflowsJSON(Collection<File> workflows) {
         JSONObject json = new JSONObject();
