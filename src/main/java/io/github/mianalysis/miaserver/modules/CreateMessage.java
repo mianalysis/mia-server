@@ -19,7 +19,6 @@ import io.github.mianalysis.mia.object.parameters.ParameterGroup.ParameterUpdate
 import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.parameters.SeparatorP;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
-import io.github.mianalysis.mia.object.parameters.text.StringP;
 import io.github.mianalysis.mia.object.parameters.text.TextAreaP;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;

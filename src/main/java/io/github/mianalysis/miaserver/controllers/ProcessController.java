@@ -1,248 +1,270 @@
-// package io.github.mianalysis.miaserver.controllers;
+package io.github.mianalysis.miaserver.controllers;
 
-// import java.io.File;
-// import java.util.Collection;
+import java.io.File;
 
-// import org.apache.commons.io.FileUtils;
-// import org.apache.commons.io.FilenameUtils;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.http.MediaType;
-// import org.springframework.http.ResponseEntity;
-// import org.springframework.messaging.handler.annotation.MessageMapping;
-// import org.springframework.messaging.simp.annotation.SendToUser;
-// import org.springframework.stereotype.Controller;
-// import org.springframework.web.bind.annotation.ResponseBody;
+import org.apache.commons.io.FilenameUtils;
 
-// import io.github.mianalysis.mia.module.Module;
-// import io.github.mianalysis.mia.module.Modules;
-// import io.github.mianalysis.mia.module.core.InputControl;
-// import io.github.mianalysis.mia.module.system.GlobalVariables;
-// import io.github.mianalysis.mia.object.Workspace;
-// import io.github.mianalysis.mia.object.parameters.ParameterGroup;
-// import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
-// import io.github.mianalysis.miaserver.beans.CloudModuleGroups;
-// import io.github.mianalysis.miaserver.beans.CloudModules;
-// import io.github.mianalysis.miaserver.beans.CloudWorkspace;
-// import io.github.mianalysis.miaserver.requests.SetParameterRequest;
-// import io.github.mianalysis.miaserver.requests.SetWorkflowRequest;
-// import io.github.mianalysis.miaserver.utils.JSONWriter;
-// import io.github.mianalysis.miaserver.utils.ModuleGroups;
-// import io.github.mianalysis.miaserver.utils.ProcessResult;
+import io.github.mianalysis.mia.module.Modules;
+import io.github.mianalysis.mia.module.core.InputControl;
+import io.github.mianalysis.mia.module.system.GlobalVariables;
+import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.miaserver.utils.CloudModuleGroups;
+import io.github.mianalysis.miaserver.utils.CloudModules;
+import io.github.mianalysis.miaserver.utils.CloudWorkspace;
+import io.github.mianalysis.miaserver.utils.Initialiser;
+import io.github.mianalysis.miaserver.utils.JSONWriter;
+import io.github.mianalysis.miaserver.utils.ModuleGroups;
+import io.github.mianalysis.miaserver.utils.ProcessResult;
 
-// @Controller
-// public class ProcessController {
-// 	@Autowired
-// 	private CloudWorkspace cloudWorkspace;
+class ProcessController {
+    public static void main(String[] args) {
+        new Initialiser().initialise();
+    }
+    
+    private CloudWorkspace cloudWorkspace = new CloudWorkspace();
+    private CloudModules cloudModules = new CloudModules();
+    private CloudModuleGroups cloudModuleGroups = new CloudModuleGroups();
 
-// 	@Autowired
-// 	private CloudModules cloudModules;
+    private boolean processActive = false;
 
-// 	@Autowired
-// 	private CloudModuleGroups cloudModuleGroups;
+    // // @Resource(name = "getModules")
+    // // private Modules modules;
 
-// 	private boolean processActive = false;
+    // @MessageMapping("/getworkflows")
+    // @SendToUser("/queue/workflows")
+    // public @ResponseBody ResponseEntity<String> getWorkflows() throws Exception {
+    // String workflowsPath = "src/main/resources/mia/workflows/";
+    // Collection<File> workflowFiles = FileUtils.listFiles(new File(workflowsPath),
+    // new String[] { "mia" }, false);
 
-// 	// @Resource(name = "getModules")
-// 	// private Modules modules;
+    // return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+    // .body(JSONWriter.getWorkflowsJSON(workflowFiles).toString());
 
-// 	@MessageMapping("/getworkflows")
-// 	@SendToUser("/queue/workflows")
-// 	public @ResponseBody ResponseEntity<String> getWorkflows() throws Exception {
-// 		String workflowsPath = "src/main/resources/mia/workflows/";
-// 		Collection<File> workflowFiles = FileUtils.listFiles(new File(workflowsPath), new String[] { "mia" }, false);
+    // }
 
-// 		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-// 				.body(JSONWriter.getWorkflowsJSON(workflowFiles).toString());
+    public String setWorkflow(String workflowXML, String workflowPath) throws Exception {
+        try {
+            if (cloudModules == null)
+                cloudModules = new CloudModules();
 
-// 	}
+            if (cloudWorkspace == null)
+                cloudWorkspace = new CloudWorkspace();
 
-// 	@MessageMapping("/setworkflow")
-// 	@SendToUser("/queue/result")
-// 	public @ResponseBody ResponseEntity<String> setworkflow(SetWorkflowRequest request) throws Exception {
-// 		String workflowPath = "src/main/resources/mia/workflows/" + request.getWorkflowName() + ".mia";
-// 		Modules modules = cloudModules.initialiseModules(workflowPath);
-// 		modules.setAnalysisFilename(workflowPath);
-// 		GlobalVariables.updateVariables(modules);
+            if (cloudModuleGroups == null)
+                cloudModuleGroups = new CloudModuleGroups();
 
-// 		String inputPath = modules.getInputControl().getParameterValue(InputControl.INPUT_PATH, null);
-// 		Workspace workspace = cloudWorkspace.initialiseWorkspace(inputPath);
+            Modules modules = cloudModules.initialiseModules(workflowXML);
+            System.out.println(modules);
+            System.out.println(modules.size());
+            modules.setAnalysisFilename(workflowPath);
+            System.out.println("Set analysis filename");
+            GlobalVariables.updateVariables(modules);
+            System.out.println("Updated global variables");
 
-// 		ModuleGroups moduleGroups = cloudModuleGroups.initialiseModuleGroups(modules);
+            System.out.println("Input control: "+modules.getInputControl());
 
-// 		ProcessResult.getInstance().clear();
+            String inputPath = modules.getInputControl().getParameterValue(InputControl.INPUT_PATH, null);
+            System.out.println("Input path: "+inputPath);
+            System.out.println("Cloud workspace: "+cloudWorkspace);
+            Workspace workspace = cloudWorkspace.initialiseWorkspace(inputPath);
+            System.out.println("Workspace: "+workspace);
 
-// 		if (moduleGroups == null) {
-// 			return process();
-// 		} else {
-// 			if (moduleGroups.hasPreprocessingGroup())
-// 				moduleGroups.getPreprocessingGroup().execute(modules, workspace);
+            ModuleGroups moduleGroups = cloudModuleGroups.initialiseModuleGroups(modules);
+            System.out.println("Module groups: "+moduleGroups);
 
-// 			return processgroup();
-// 		}
-// 	}
+            ProcessResult.getInstance().clear();
+            System.out.println("Cleared process result");
 
-// 	@MessageMapping("/process")
-// 	@SendToUser("/queue/result")
-// 	public @ResponseBody ResponseEntity<String> process() throws Exception {
-// 		if (processActive)
-// 			return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-// 					.body("busy");
+            if (moduleGroups == null) {
+                return process();
+            } else {
+                if (moduleGroups.hasPreprocessingGroup())
+                    moduleGroups.getPreprocessingGroup().execute(modules, workspace);
 
-// 		try {
-// 			processActive = true;
-// 			Modules modules = cloudModules.getModules();
-// 			File workflowFile = new File(modules.getAnalysisFilename());
+                return processGroup();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
 
-// 			ProcessResult.getInstance().clear();
-// 			ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
-// 			ProcessResult.getInstance().put("modules",
-// 					JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()));
-// 			File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-// 					+ FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-// 			ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
-// 			modules.execute(cloudWorkspace.getWorkspace());
+    public String process() throws Exception {
+        if (processActive) {
+            System.out.println("Process busy");
+            return null;
+        }
 
-// 			processActive = false;
+        try {
+            processActive = true;
+            Modules modules = cloudModules.getModules();
+            File workflowFile = new File(modules.getAnalysisFilename());
 
-// 		} catch (Exception e) {
-// 			e.printStackTrace();
-// 			processActive = false;
-// 		}
+            ProcessResult.getInstance().clear();
+            ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
+            ProcessResult.getInstance().put("modules",
+                    JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()));
+            File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
+                    + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
+            ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
+            modules.execute(cloudWorkspace.getWorkspace());
 
-// 		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ProcessResult.getInstance().toString());
-// 	}
+            processActive = false;
 
-// 	@MessageMapping("/processgroup")
-// 	@SendToUser("/queue/result")
-// 	public @ResponseBody ResponseEntity<String> processgroup() throws Exception {
-// 		if (processActive)
-// 			return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("busy");
+        } catch (Exception e) {
+            e.printStackTrace();
+            processActive = false;
+        }
 
-// 		try {
-// 			processActive = true;
+        return ProcessResult.getInstance().toString();
+    }
 
-// 			Modules modules = cloudModules.getModules();
-// 			ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
-// 			File workflowFile = new File(modules.getAnalysisFilename());
+    public String processGroup() throws Exception {
+        if (processActive) {
+            System.out.println("Process busy");
+            return null;
+        }
+        // return
+        // ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("busy");
 
-// 			ProcessResult.getInstance().clear();
-// 			ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
-// 			ProcessResult.getInstance().put("modules", JSONWriter
-// 					.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace()));
+        try {
+            processActive = true;
 
-// 			File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-// 					+ FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-// 			ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
+            Modules modules = cloudModules.getModules();
+            ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+            File workflowFile = new File(modules.getAnalysisFilename());
 
-// 			moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
+            ProcessResult.getInstance().clear();
+            ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
+            ProcessResult.getInstance().put("modules", JSONWriter
+                    .getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace()));
 
-// 			processActive = false;
-			
-// 		} catch (Exception e) {
-// 			e.printStackTrace();
-// 			processActive = false;
-// 		}
+            File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
+                    + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
+            ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
 
-// 		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ProcessResult.getInstance().toString());
+            moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
 
-// 	}
+            processActive = false;
 
-// 	@MessageMapping("/setparameter")
-// 	@SendToUser("/queue/result")
-// 	public @ResponseBody ResponseEntity<String> setparameter(SetParameterRequest request) throws Exception {
-// 		Modules modules = cloudModules.getModules();
-// 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+        } catch (Exception e) {
+            e.printStackTrace();
+            processActive = false;
+        }
 
-// 		for (Module module : modules.values()) {
-// 			if (module.getModuleID().equals(request.getModuleID())) {
-// 				if (request.getParentGroupName() == null || request.getParentGroupName().equals("")) {
-// 					Parameter parameter = module.getParameter(request.getParameterName());
-// 					parameter.setValueFromString(request.getParameterValue());
-// 				} else {
-// 					ParameterGroup parentGroup = module.getParameter(request.getParentGroupName());
-// 					Parameter parameter = parentGroup.getCollections(true).get(request.getGroupCollectionNumber())
-// 							.getParameter(request.getParameterName());
-// 					parameter.setValueFromString(request.getParameterValue());
-// 				}
+        return ProcessResult.getInstance().toString();
 
-// 				break;
-// 			}
-// 		}
+    }
 
-// 		// Runtime runtime = Runtime.getRuntime();
-// 		// System.out.println("Memory used =
-// 		// "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users
-// 		// "+CloudWorkspace.getWorkspaceCount());
+    // @MessageMapping("/setparameter")
+    // @SendToUser("/queue/result")
+    // public @ResponseBody ResponseEntity<String> setparameter(SetParameterRequest
+    // request) throws Exception {
+    // Modules modules = cloudModules.getModules();
+    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-// 		// if (moduleGroups == null)
-// 		// return ResponseEntity.ok()
-// 		// .contentType(MediaType.APPLICATION_JSON)
-// 		// .body(JSONWriter.getModulesJSON(modules,
-// 		// cloudWorkspace.getWorkspace()).toString());
-// 		// else
-// 		// return ResponseEntity.ok()
-// 		// .contentType(MediaType.APPLICATION_JSON)
-// 		// .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
-// 		// cloudWorkspace.getWorkspace()).toString());
+    // for (Module module : modules.values()) {
+    // if (module.getModuleID().equals(request.getModuleID())) {
+    // if (request.getParentGroupName() == null ||
+    // request.getParentGroupName().equals("")) {
+    // Parameter parameter = module.getParameter(request.getParameterName());
+    // parameter.setValueFromString(request.getParameterValue());
+    // } else {
+    // ParameterGroup parentGroup =
+    // module.getParameter(request.getParentGroupName());
+    // Parameter parameter =
+    // parentGroup.getCollections(true).get(request.getGroupCollectionNumber())
+    // .getParameter(request.getParameterName());
+    // parameter.setValueFromString(request.getParameterValue());
+    // }
 
-// 		if (moduleGroups == null)
-// 			return process();
-// 		else
-// 			return processgroup();
+    // break;
+    // }
+    // }
 
-// 	}
+    // // Runtime runtime = Runtime.getRuntime();
+    // // System.out.println("Memory used =
+    // // "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users
+    // // "+CloudWorkspace.getWorkspaceCount());
 
-// 	@MessageMapping("/previousgroup")
-// 	@SendToUser("/queue/result")
-// 	public @ResponseBody ResponseEntity<String> previousgroup() throws Exception {
-// 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    // // if (moduleGroups == null)
+    // // return ResponseEntity.ok()
+    // // .contentType(MediaType.APPLICATION_JSON)
+    // // .body(JSONWriter.getModulesJSON(modules,
+    // // cloudWorkspace.getWorkspace()).toString());
+    // // else
+    // // return ResponseEntity.ok()
+    // // .contentType(MediaType.APPLICATION_JSON)
+    // //
+    // .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
+    // // cloudWorkspace.getWorkspace()).toString());
 
-// 		// Move to the previous module group. If not possible, it will return the same
-// 		// set of modules
-// 		moduleGroups.previousGroup();
+    // if (moduleGroups == null)
+    // return process();
+    // else
+    // return processgroup();
 
-// 		// Return the parameters for these modules
-// 		return processgroup();
+    // }
 
-// 	}
+    // @MessageMapping("/previousgroup")
+    // @SendToUser("/queue/result")
+    // public @ResponseBody ResponseEntity<String> previousgroup() throws Exception
+    // {
+    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-// 	@MessageMapping("/haspreviousgroup")
-// 	@SendToUser("/queue/previousstatus")
-// 	public @ResponseBody ResponseEntity<String> haspreviousgroup() throws Exception {
-// 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    // // Move to the previous module group. If not possible, it will return the
+    // same
+    // // set of modules
+    // moduleGroups.previousGroup();
 
-// 		String bodyString = moduleGroups != null ? String.valueOf(moduleGroups.hasPreviousGroup()) : "";
+    // // Return the parameters for these modules
+    // return processgroup();
 
-// 		// Return the parameters for these modules
-// 		return ResponseEntity.ok()
-// 				.contentType(MediaType.TEXT_PLAIN)
-// 				.body(bodyString);
+    // }
 
-// 	}
+    // @MessageMapping("/haspreviousgroup")
+    // @SendToUser("/queue/previousstatus")
+    // public @ResponseBody ResponseEntity<String> haspreviousgroup() throws
+    // Exception {
+    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-// 	@MessageMapping("/nextgroup")
-// 	@SendToUser("/queue/result")
-// 	public @ResponseBody ResponseEntity<String> nextgroup() throws Exception {
-// 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    // String bodyString = moduleGroups != null ?
+    // String.valueOf(moduleGroups.hasPreviousGroup()) : "";
 
-// 		// Move to the next module group. If not possible, it will return the same set
-// 		// of modules
-// 		moduleGroups.nextGroup();
+    // // Return the parameters for these modules
+    // return ResponseEntity.ok()
+    // .contentType(MediaType.TEXT_PLAIN)
+    // .body(bodyString);
 
-// 		// Return the parameters for these modules
-// 		return processgroup();
+    // }
 
-// 	}
+    // @MessageMapping("/nextgroup")
+    // @SendToUser("/queue/result")
+    // public @ResponseBody ResponseEntity<String> nextgroup() throws Exception {
+    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-// 	@MessageMapping("/hasnextgroup")
-// 	@SendToUser("/queue/nextstatus")
-// 	public @ResponseBody ResponseEntity<String> hasnextgroup() throws Exception {
-// 		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    // // Move to the next module group. If not possible, it will return the same
+    // set
+    // // of modules
+    // moduleGroups.nextGroup();
 
-// 		String bodyString = moduleGroups != null ? String.valueOf(moduleGroups.hasNextGroup()) : "";
+    // // Return the parameters for these modules
+    // return processgroup();
 
-// 		// Return the parameters for these modules
-// 		return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(bodyString);
+    // }
 
-// 	}
-// }
+    // @MessageMapping("/hasnextgroup")
+    // @SendToUser("/queue/nextstatus")
+    // public @ResponseBody ResponseEntity<String> hasnextgroup() throws Exception {
+    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+
+    // String bodyString = moduleGroups != null ?
+    // String.valueOf(moduleGroups.hasNextGroup()) : "";
+
+    // // Return the parameters for these modules
+    // return
+    // ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(bodyString);
+
+    // }
+    // }
+}

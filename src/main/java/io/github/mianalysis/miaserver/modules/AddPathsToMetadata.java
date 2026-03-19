@@ -1,195 +1,189 @@
-// package io.github.mianalysis.miaserver.modules;
+package io.github.mianalysis.miaserver.modules;
 
-// import java.io.File;
+import java.io.File;
 
-// import org.scijava.Priority;
-// import org.scijava.plugin.Plugin;
-// import org.springframework.beans.factory.annotation.Autowired;
+import org.scijava.Priority;
+import org.scijava.plugin.Plugin;
 
-// import io.github.mianalysis.miaserver.ServerCategories;
-// import io.github.mianalysis.miaserver.beans.CloudWorkspace;
+import io.github.mianalysis.mia.module.Category;
+import io.github.mianalysis.mia.module.Module;
+import io.github.mianalysis.mia.module.Modules;
+import io.github.mianalysis.mia.module.system.GlobalVariables;
+import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.parameters.ParameterState;
+import io.github.mianalysis.mia.object.parameters.Parameters;
+import io.github.mianalysis.mia.object.parameters.text.MessageP;
+import io.github.mianalysis.mia.object.parameters.text.StringP;
+import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
+import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
+import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
+import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
+import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
+import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
+import io.github.mianalysis.mia.object.system.Status;
+import io.github.mianalysis.miaserver.ServerCategories;
+/**
+ * A template MIA module.
+ */
+@Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 
-// import io.github.mianalysis.mia.module.Category;
-// import io.github.mianalysis.mia.module.Module;
-// import io.github.mianalysis.mia.module.Modules;
-// import io.github.mianalysis.mia.module.system.GlobalVariables;
-// import io.github.mianalysis.mia.object.Workspace;
-// import io.github.mianalysis.mia.object.parameters.ParameterState;
-// import io.github.mianalysis.mia.object.parameters.Parameters;
-// import io.github.mianalysis.mia.object.parameters.text.MessageP;
-// import io.github.mianalysis.mia.object.parameters.text.StringP;
-// import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
-// import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
-// import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
-// import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
-// import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
-// import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
-// import io.github.mianalysis.mia.object.system.Status;
+public class AddPathsToMetadata extends GlobalVariables {
 
-// /**
-//  * A template MIA module.
-//  */
-// @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
+    public static final String MESSAGE = "Message";
 
-// public class AddPathsToMetadata extends GlobalVariables {
-//     @Autowired
-// 	private CloudWorkspace cloudWorkspace;
-
-//     public static final String MESSAGE = "Message";
-
-//     public AddPathsToMetadata(Modules modules) {
-//         // The first argument is the name by which the module will be seen in the GUI.
-//         super("Add paths to metadata", modules);
+    public AddPathsToMetadata(Modules modules) {
+        // The first argument is the name by which the module will be seen in the GUI.
+        super("Add paths to metadata", modules);
         
-//     }
+    }
 
-//     @Override
-//     public Category getCategory() {
-//         return ServerCategories.SCHOOLS;
-//     }
+    @Override
+    public Category getCategory() {
+        return ServerCategories.SCHOOLS;
+    }
 
-//     @Override
-//     public String getVersionNumber() {
-//         return "1.0.0";
-//     }
+    @Override
+    public String getVersionNumber() {
+        return "1.0.0";
+    }
 
-//     @Override
-//     public String getDescription() {
-//         return "";
-//     }
+    @Override
+    public String getDescription() {
+        return "";
+    }
 
-//     @Override
-//     public Status process(Workspace workspace) {
-//         String workflowPath = modules.getAnalysisFilename();
+    @Override
+    public Status process(Workspace workspace) {
+        String workflowPath = modules.getAnalysisFilename();
 
-//         File workflowFile = new File(workflowPath);
-//         if (!workflowFile.exists())
-//             return Status.PASS;
+        File workflowFile = new File(workflowPath);
+        if (!workflowFile.exists())
+            return Status.PASS;
 
-//         String workflowName = workflowFile.getName();
-//         if (workflowName.endsWith("mia"))
-//             workflowName = workflowName.substring(0, workflowName.length() - 4);
+        String workflowName = workflowFile.getName();
+        if (workflowName.endsWith("mia"))
+            workflowName = workflowName.substring(0, workflowName.length() - 4);
 
-//         String miaFolder = workflowFile.getParentFile().getParent();
-//         workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
-//         workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
-//         workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
+        String miaFolder = workflowFile.getParentFile().getParent();
+        workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
+        workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
+        workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
 
-//         return Status.PASS;
+        return Status.PASS;
 
-//     }
+    }
 
-//     @Override
-//     protected void initialiseParameters() {
-//         parameters.add(new MessageP(MESSAGE, this, "This module automatically adds the following metadata and global variable values:\r\n    - ImagesPath\r\n    - ThumbnailsPath\r\n    - WorkflowName\r\n    - WorkflowPath", ParameterState.MESSAGE,128));
-//     }
+    @Override
+    protected void initialiseParameters() {
+        parameters.add(new MessageP(MESSAGE, this, "This module automatically adds the following metadata and global variable values:\r\n    - ImagesPath\r\n    - ThumbnailsPath\r\n    - WorkflowName\r\n    - WorkflowPath", ParameterState.MESSAGE,128));
+    }
 
-//     @Override
-//     public Parameters updateAndGetParameters() {
-//         String workflowPath = modules.getAnalysisFilename();
+    @Override
+    public Parameters updateAndGetParameters() {
+        String workflowPath = modules.getAnalysisFilename();
 
-//         File workflowFile = new File(workflowPath);
-//         if (!workflowFile.exists())
-//             return parameters;
+        File workflowFile = new File(workflowPath);
+        if (!workflowFile.exists())
+            return parameters;
 
-//         String workflowName = workflowFile.getName();
-//         if (workflowName.endsWith("mia"))
-//             workflowName = workflowName.substring(0, workflowName.length() - 4);
-//         // workspace.getMetadata().put("WorkflowName", workflowName);
+        String workflowName = workflowFile.getName();
+        if (workflowName.endsWith("mia"))
+            workflowName = workflowName.substring(0, workflowName.length() - 4);
+        // workspace.getMetadata().put("WorkflowName", workflowName);
 
-//         String miaFolder = workflowFile.getParentFile().getParent();
-//         // workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
-//         // workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
-//         // workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
+        String miaFolder = workflowFile.getParentFile().getParent();
+        // workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
+        // workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
+        // workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
 
-//         globalVariables.put(new StringP("NAME",this,"WorkflowName"), workflowName);
-//         globalVariables.put(new StringP("NAME",this,"ImagesPath"), miaFolder + "/images/");
-//         globalVariables.put(new StringP("NAME",this,"ThumbnailsPath"), miaFolder + "/thumbnails/");
-//         globalVariables.put(new StringP("NAME",this,"WorkflowsPath"), miaFolder + "/workflows/");
+        globalVariables.put(new StringP("NAME",this,"WorkflowName"), workflowName);
+        globalVariables.put(new StringP("NAME",this,"ImagesPath"), miaFolder + "/images/");
+        globalVariables.put(new StringP("NAME",this,"ThumbnailsPath"), miaFolder + "/thumbnails/");
+        globalVariables.put(new StringP("NAME",this,"WorkflowsPath"), miaFolder + "/workflows/");
 
-//         return parameters;
+        return parameters;
 
-//         // Workspace workspace = null;
-//         // ParameterGroup group = parameters.getParameter(ADD_NEW_VARIABLE);
-//         // if (group == null)
-//         //     return parameters;
+        // Workspace workspace = null;
+        // ParameterGroup group = parameters.getParameter(ADD_NEW_VARIABLE);
+        // if (group == null)
+        //     return parameters;
 
-//         // LinkedHashMap<Integer, Parameters> collections = group.getCollections(false);
-//         // collections.put(0, parameters);
+        // LinkedHashMap<Integer, Parameters> collections = group.getCollections(false);
+        // collections.put(0, parameters);
 
-//         // for (Parameters collection : collections.values()) {
-//         //     StringP variableName = (StringP) collection.get(VARIABLE_NAME);
-//         //     if (isEnabled()) {
-//         //         switch ((String) collection.getValue(VARIABLE_TYPE, workspace)) {
-//         //             case VariableTypes.BOOLEAN:
-//         //                 globalVariables.put(variableName, collection.getValue(VARIABLE_BOOLEAN, workspace).toString());
-//         //                 break;
-//         //             case VariableTypes.CHOICE:
-//         //                 globalVariables.put(variableName, collection.getValue(VARIABLE_CHOICE, workspace));
-//         //                 break;
-//         //             case VariableTypes.FILE:
-//         //                 String path = collection.getValue(VARIABLE_FILE, workspace);
-//         //                 path = path.replace("\\", "\\\\");
-//         //                 globalVariables.put(variableName, path);
-//         //                 break;
-//         //             case VariableTypes.FOLDER:
-//         //                 path = collection.getValue(VARIABLE_FOLDER, workspace);
-//         //                 path = path.replace("\\", "\\\\");
-//         //                 globalVariables.put(variableName, path);
-//         //                 break;
-//         //             case VariableTypes.TEXT:
-//         //                 globalVariables.put(variableName, collection.getValue(VARIABLE_VALUE, workspace));
-//         //                 break;
-//         //         }
+        // for (Parameters collection : collections.values()) {
+        //     StringP variableName = (StringP) collection.get(VARIABLE_NAME);
+        //     if (isEnabled()) {
+        //         switch ((String) collection.getValue(VARIABLE_TYPE, workspace)) {
+        //             case VariableTypes.BOOLEAN:
+        //                 globalVariables.put(variableName, collection.getValue(VARIABLE_BOOLEAN, workspace).toString());
+        //                 break;
+        //             case VariableTypes.CHOICE:
+        //                 globalVariables.put(variableName, collection.getValue(VARIABLE_CHOICE, workspace));
+        //                 break;
+        //             case VariableTypes.FILE:
+        //                 String path = collection.getValue(VARIABLE_FILE, workspace);
+        //                 path = path.replace("\\", "\\\\");
+        //                 globalVariables.put(variableName, path);
+        //                 break;
+        //             case VariableTypes.FOLDER:
+        //                 path = collection.getValue(VARIABLE_FOLDER, workspace);
+        //                 path = path.replace("\\", "\\\\");
+        //                 globalVariables.put(variableName, path);
+        //                 break;
+        //             case VariableTypes.TEXT:
+        //                 globalVariables.put(variableName, collection.getValue(VARIABLE_VALUE, workspace));
+        //                 break;
+        //         }
 
-//         //     } else if (globalVariables.containsKey(variableName)) {
-//         //         globalVariables.remove(variableName);
-//         //     }
-//         // }
+        //     } else if (globalVariables.containsKey(variableName)) {
+        //         globalVariables.remove(variableName);
+        //     }
+        // }
 
-//         // return parameters;
+        // return parameters;
 
-//     }
+    }
 
-//     @Override
-//     public ImageMeasurementRefs updateAndGetImageMeasurementRefs() {
-//         return null;
-//     }
+    @Override
+    public ImageMeasurementRefs updateAndGetImageMeasurementRefs() {
+        return null;
+    }
 
-//     @Override
-//     public ObjMeasurementRefs updateAndGetObjectMeasurementRefs() {
-//         return null;
-//     }
+    @Override
+    public ObjMeasurementRefs updateAndGetObjectMeasurementRefs() {
+        return null;
+    }
 
-//     @Override
-//     public ObjMetadataRefs updateAndGetObjectMetadataRefs() {
-//         return null;
-//     }
+    @Override
+    public ObjMetadataRefs updateAndGetObjectMetadataRefs() {
+        return null;
+    }
 
-//     @Override
-//     public MetadataRefs updateAndGetMetadataReferences() {
-//         MetadataRefs returnedRefs = new MetadataRefs();
+    @Override
+    public MetadataRefs updateAndGetMetadataReferences() {
+        MetadataRefs returnedRefs = new MetadataRefs();
 
-//         returnedRefs.add(metadataRefs.getOrPut("ImagesPath"));
-//         returnedRefs.add(metadataRefs.getOrPut("ThumbnailsPath"));
-//         returnedRefs.add(metadataRefs.getOrPut("WorkflowsPath"));
+        returnedRefs.add(metadataRefs.getOrPut("ImagesPath"));
+        returnedRefs.add(metadataRefs.getOrPut("ThumbnailsPath"));
+        returnedRefs.add(metadataRefs.getOrPut("WorkflowsPath"));
 
-//         return returnedRefs;
+        return returnedRefs;
 
-//     }
+    }
 
-//     @Override
-//     public ParentChildRefs updateAndGetParentChildRefs() {
-//         return null;
-//     }
+    @Override
+    public ParentChildRefs updateAndGetParentChildRefs() {
+        return null;
+    }
 
-//     @Override
-//     public PartnerRefs updateAndGetPartnerRefs() {
-//         return null;
-//     }
+    @Override
+    public PartnerRefs updateAndGetPartnerRefs() {
+        return null;
+    }
 
-//     @Override
-//     public boolean verify() {
-//         return true;
-//     }
-// }
+    @Override
+    public boolean verify() {
+        return true;
+    }
+}
