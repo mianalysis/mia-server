@@ -8,6 +8,17 @@ public class SetParameterRequest {
     private Number groupCollectionNumber;
     private String imageHash;
 
+    public SetParameterRequest(String moduleID, String parameterName, String parameterValue, String parentGroupName,
+            Number groupCollectionNumber, String imageHash) {
+        this.moduleID = moduleID;
+        this.parameterName = parameterName;
+        this.parameterValue = parameterValue;
+        this.parentGroupName = parentGroupName;
+        this.groupCollectionNumber = groupCollectionNumber;
+        this.imageHash = imageHash;
+        
+    }
+
     public String getModuleID() {
         return moduleID;
     }
@@ -55,5 +66,5 @@ public class SetParameterRequest {
     public void setImageHash(String imageHash) {
         this.imageHash = imageHash;
     }
-    
+
 }

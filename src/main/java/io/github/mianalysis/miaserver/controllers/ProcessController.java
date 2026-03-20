@@ -27,21 +27,6 @@ class ProcessController {
 
     private boolean processActive = false;
 
-    // // @Resource(name = "getModules")
-    // // private Modules modules;
-
-    // @MessageMapping("/getworkflows")
-    // @SendToUser("/queue/workflows")
-    // public @ResponseBody ResponseEntity<String> getWorkflows() throws Exception {
-    // String workflowsPath = "src/main/resources/mia/workflows/";
-    // Collection<File> workflowFiles = FileUtils.listFiles(new File(workflowsPath),
-    // new String[] { "mia" }, false);
-
-    // return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-    // .body(JSONWriter.getWorkflowsJSON(workflowFiles).toString());
-
-    // }
-
     public String setWorkflow(String workflowXML, String workflowPath) throws Exception {
         try {
             if (cloudModules == null)
@@ -54,26 +39,15 @@ class ProcessController {
                 cloudModuleGroups = new CloudModuleGroups();
 
             Modules modules = cloudModules.initialiseModules(workflowXML);
-            System.out.println(modules);
-            System.out.println(modules.size());
             modules.setAnalysisFilename(workflowPath);
-            System.out.println("Set analysis filename");
             GlobalVariables.updateVariables(modules);
-            System.out.println("Updated global variables");
-
-            System.out.println("Input control: "+modules.getInputControl());
 
             String inputPath = modules.getInputControl().getParameterValue(InputControl.INPUT_PATH, null);
-            System.out.println("Input path: "+inputPath);
-            System.out.println("Cloud workspace: "+cloudWorkspace);
             Workspace workspace = cloudWorkspace.initialiseWorkspace(inputPath);
-            System.out.println("Workspace: "+workspace);
 
             ModuleGroups moduleGroups = cloudModuleGroups.initialiseModuleGroups(modules);
-            System.out.println("Module groups: "+moduleGroups);
 
             ProcessResult.getInstance().clear();
-            System.out.println("Cleared process result");
 
             if (moduleGroups == null) {
                 return process();
@@ -124,8 +98,6 @@ class ProcessController {
             System.out.println("Process busy");
             return null;
         }
-        // return
-        // ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("busy");
 
         try {
             processActive = true;

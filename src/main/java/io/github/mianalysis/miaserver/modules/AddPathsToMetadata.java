@@ -57,17 +57,16 @@ public class AddPathsToMetadata extends GlobalVariables {
         String workflowPath = modules.getAnalysisFilename();
 
         File workflowFile = new File(workflowPath);
-        if (!workflowFile.exists())
-            return Status.PASS;
+        // if (!workflowFile.exists())
+        //     return Status.PASS;
 
         String workflowName = workflowFile.getName();
         if (workflowName.endsWith("mia"))
             workflowName = workflowName.substring(0, workflowName.length() - 4);
 
-        String miaFolder = workflowFile.getParentFile().getParent();
-        workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
-        workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
-        workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
+        workspace.getMetadata().put("ImagesPath", "/app/mia/images/");
+        workspace.getMetadata().put("ThumbnailsPath", "/app/mia/thumbnails/");
+        workspace.getMetadata().put("WorkflowsPath", "/app/mia/workflows/");
 
         return Status.PASS;
 
@@ -83,23 +82,17 @@ public class AddPathsToMetadata extends GlobalVariables {
         String workflowPath = modules.getAnalysisFilename();
 
         File workflowFile = new File(workflowPath);
-        if (!workflowFile.exists())
-            return parameters;
+        // if (!workflowFile.exists())
+        //     return parameters;
 
         String workflowName = workflowFile.getName();
         if (workflowName.endsWith("mia"))
             workflowName = workflowName.substring(0, workflowName.length() - 4);
-        // workspace.getMetadata().put("WorkflowName", workflowName);
-
-        String miaFolder = workflowFile.getParentFile().getParent();
-        // workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
-        // workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
-        // workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
 
         globalVariables.put(new StringP("NAME",this,"WorkflowName"), workflowName);
-        globalVariables.put(new StringP("NAME",this,"ImagesPath"), miaFolder + "/images/");
-        globalVariables.put(new StringP("NAME",this,"ThumbnailsPath"), miaFolder + "/thumbnails/");
-        globalVariables.put(new StringP("NAME",this,"WorkflowsPath"), miaFolder + "/workflows/");
+        globalVariables.put(new StringP("NAME",this,"ImagesPath"), "/app/mia/images/");
+        globalVariables.put(new StringP("NAME",this,"ThumbnailsPath"), "/app/mia/thumbnails/");
+        globalVariables.put(new StringP("NAME",this,"WorkflowsPath"), "/app/mia/workflows/");
 
         return parameters;
 
