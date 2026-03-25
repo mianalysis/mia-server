@@ -14,6 +14,7 @@
 		<java.version>8</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
+		<scp2>compile</scp2>
 	</properties>
 
 	<repositories>
@@ -37,21 +38,117 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20231013</version>
+		</dependency>
+
+		<!--The
+		following is just for the Nullable and Non Null annotations-->
+		<dependency>
+			<groupId>com.drewnoakes</groupId>
+			<artifactId>metadata-extractor</artifactId>
+			<version>2.18.0</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
 			<version>2.100.0</version>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scripting-groovy</artifactId>
 			<version>1.0.0</version>
-		</dependency>
+		</dependency> -->
 
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
 			<version>2.14.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-plugins-uploader-ssh</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-plugins-uploader-webdav</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-updater</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-ui-awt</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-ui-swing</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>script-editor</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>script-editor-jython</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>script-editor-scala</artifactId>
+				</exclusion>
+
+				<!-- <exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>scripting-beanshell</artifactId>
+				</exclusion> -->
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>scripting-clojure</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>scripting-groovy</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>scripting-javascript</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>scripting-renjin</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>scripting-jruby</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>scripting-jython</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>scripting-scala</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -82,24 +179,123 @@
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-core</artifactId>
 			<version>1.7.26</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.scif</groupId>
+					<artifactId>scifio-ome-xml</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-ui-awt</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-ui-swing</artifactId>
+				</exclusion>
+
+				<!-- <exclusion>
+					<groupId>ome</groupId>
+					<artifactId>bio-formats_plugins</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>ome</groupId>
+					<artifactId>bio-formats-tools</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>ome</groupId>
+					<artifactId>formats-api</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>ome</groupId>
+					<artifactId>formats-bsd</artifactId>
+				</exclusion> -->
+
+				<!-- <exclusion>
+					<groupId>ome</groupId>
+					<artifactId>formats-gpl</artifactId>
+				</exclusion> -->
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>script-editor</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-modules</artifactId>
 			<version>1.7.26</version>
+			<exclusions>
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-ui-awt</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>net.imagej</groupId>
+					<artifactId>imagej-ui-swing</artifactId>
+				</exclusion>
+
+				<!-- <exclusion>
+					<groupId>ome</groupId>
+					<artifactId>bio-formats_plugins</artifactId>
+				</exclusion> -->
+
+				<!-- <exclusion>
+					<groupId>ome</groupId>
+					<artifactId>formats-api</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>ome</groupId>
+					<artifactId>formats-bsd</artifactId>
+				</exclusion> -->
+
+				<!-- <exclusion>
+					<groupId>ome</groupId>
+					<artifactId>formats-gpl</artifactId>
+				</exclusion> -->
+
+				<exclusion>
+					<groupId>org.apache.xmlgraphics</groupId>
+					<artifactId>batik-dom</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.apache.xmlgraphics</groupId>
+					<artifactId>batik-svggen</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>org.scijava</groupId>
+					<artifactId>script-editor</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-plugin</artifactId>
 			<version>1.7.26</version>
+			<scope>${scp2}</scope>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy</artifactId>
 			<version>3.0.4</version>
+		</dependency> -->
+
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scripting-beanshell</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
 
@@ -145,67 +341,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
-			<!-- <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.0.0</version>
-				<executions>
-					<execution>
-						<id>copy-dependencies</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-dependencies</goal>
-						</goals>
-						<configuration>
-							<excludeScope>provided</excludeScope>
-							<includeScope>runtime</includeScope>
-
-							<excludeArtifactIds>
-			commons-codec,commons-beanutils,commons-collections,commons-collections4,commons-compress,commons-io,commons-lang3,commons-logging,commons-math3,commons-text,fastutil,slf4j-api,xml-apis
-							</excludeArtifactIds>
-
-							<outputDirectory>${project.build.directory}/mia-dependencies/</outputDirectory>
-							<overWriteReleases>false</overWriteReleases>
-							<overWriteSnapshots>false</overWriteSnapshots>
-							<overWriteIfNewer>true</overWriteIfNewer>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin> -->
-
-			<!-- <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.5.0</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<minimizeJar>true</minimizeJar>
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>META-INF/jruby.home/**</exclude>
-										<exclude>org/jruby/**</exclude>
-										<exclude>*-sources.jar</exclude>
-										<exclude>**/package-info.class</exclude>
-										<exclude>META-INF/*.SF</exclude>
-										<exclude>META-INF/*.DSA</exclude>
-										<exclude>META-INF/*.RSA</exclude>
-									</excludes>
-								</filter>
-							</filters>
-							<keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin> -->
 		</plugins>
 	</build>
-
 </project>

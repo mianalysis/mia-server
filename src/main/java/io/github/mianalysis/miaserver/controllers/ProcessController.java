@@ -4,10 +4,13 @@ import java.io.File;
 
 import org.apache.commons.io.FilenameUtils;
 
+import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.InputControl;
 import io.github.mianalysis.mia.module.system.GlobalVariables;
 import io.github.mianalysis.mia.object.Workspace;
+import io.github.mianalysis.mia.object.parameters.ParameterGroup;
+import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 import io.github.mianalysis.miaserver.utils.CloudModuleGroups;
 import io.github.mianalysis.miaserver.utils.CloudModules;
 import io.github.mianalysis.miaserver.utils.CloudWorkspace;
@@ -20,7 +23,7 @@ class ProcessController {
     public static void main(String[] args) {
         new Initialiser().initialise();
     }
-    
+
     private CloudWorkspace cloudWorkspace = new CloudWorkspace();
     private CloudModules cloudModules = new CloudModules();
     private CloudModuleGroups cloudModuleGroups = new CloudModuleGroups();
@@ -128,115 +131,86 @@ class ProcessController {
 
     }
 
-    // @MessageMapping("/setparameter")
-    // @SendToUser("/queue/result")
-    // public @ResponseBody ResponseEntity<String> setparameter(SetParameterRequest
-    // request) throws Exception {
-    // Modules modules = cloudModules.getModules();
-    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    public String setParameter(String moduleID, String parameterName, String parameterValue, String parentGroupName,
+            int groupCollectionNumber) throws Exception {
+        Modules modules = cloudModules.getModules();
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-    // for (Module module : modules.values()) {
-    // if (module.getModuleID().equals(request.getModuleID())) {
-    // if (request.getParentGroupName() == null ||
-    // request.getParentGroupName().equals("")) {
-    // Parameter parameter = module.getParameter(request.getParameterName());
-    // parameter.setValueFromString(request.getParameterValue());
-    // } else {
-    // ParameterGroup parentGroup =
-    // module.getParameter(request.getParentGroupName());
-    // Parameter parameter =
-    // parentGroup.getCollections(true).get(request.getGroupCollectionNumber())
-    // .getParameter(request.getParameterName());
-    // parameter.setValueFromString(request.getParameterValue());
-    // }
+        for (Module module : modules.values()) {
+            if (module.getModuleID().equals(moduleID)) {
+                if (parentGroupName == null ||
+                        parentGroupName.equals("")) {
+                    Parameter parameter = module.getParameter(parameterName);
+                    parameter.setValueFromString(parameterValue);
+                } else {
+                    Parameter parentGroup = module.getParameter(parentGroupName);
+                    Parameter parameter = ((ParameterGroup) parentGroup).getCollections(true).get(groupCollectionNumber)
+                            .getParameter(parameterName);
+                    parameter.setValueFromString(parameterValue);
+                }
 
-    // break;
-    // }
-    // }
+                break;
+            }
+        }
 
-    // // Runtime runtime = Runtime.getRuntime();
-    // // System.out.println("Memory used =
-    // // "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users
-    // // "+CloudWorkspace.getWorkspaceCount());
+        // Runtime runtime = Runtime.getRuntime();
+        // System.out.println("Memory used =
+        // "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users
+        // "+CloudWorkspace.getWorkspaceCount());
 
-    // // if (moduleGroups == null)
-    // // return ResponseEntity.ok()
-    // // .contentType(MediaType.APPLICATION_JSON)
-    // // .body(JSONWriter.getModulesJSON(modules,
-    // // cloudWorkspace.getWorkspace()).toString());
-    // // else
-    // // return ResponseEntity.ok()
-    // // .contentType(MediaType.APPLICATION_JSON)
-    // //
-    // .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
-    // // cloudWorkspace.getWorkspace()).toString());
+        // if (moduleGroups == null)
+        // return ResponseEntity.ok()
+        // .contentType(MediaType.APPLICATION_JSON)
+        // .body(JSONWriter.getModulesJSON(modules,
+        // cloudWorkspace.getWorkspace()).toString());
+        // else
+        // return ResponseEntity.ok()
+        // .contentType(MediaType.APPLICATION_JSON)
+        // .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
+        // cloudWorkspace.getWorkspace()).toString());
 
-    // if (moduleGroups == null)
-    // return process();
-    // else
-    // return processgroup();
+        if (moduleGroups == null)
+            return process();
+        else
+            return processGroup();
 
-    // }
+    }
 
-    // @MessageMapping("/previousgroup")
-    // @SendToUser("/queue/result")
-    // public @ResponseBody ResponseEntity<String> previousgroup() throws Exception
-    // {
-    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    public String previousGroup() throws Exception {
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-    // // Move to the previous module group. If not possible, it will return the
-    // same
-    // // set of modules
-    // moduleGroups.previousGroup();
+        // Move to the previous module group. If not possible, it will return the same
+        // set of modules
+        moduleGroups.previousGroup();
 
-    // // Return the parameters for these modules
-    // return processgroup();
+        // Return the parameters for these modules
+        return processGroup();
 
-    // }
+    }
 
-    // @MessageMapping("/haspreviousgroup")
-    // @SendToUser("/queue/previousstatus")
-    // public @ResponseBody ResponseEntity<String> haspreviousgroup() throws
-    // Exception {
-    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    public boolean hasPreviousGroup() throws Exception {
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-    // String bodyString = moduleGroups != null ?
-    // String.valueOf(moduleGroups.hasPreviousGroup()) : "";
+        return moduleGroups != null ? moduleGroups.hasPreviousGroup() : false;
 
-    // // Return the parameters for these modules
-    // return ResponseEntity.ok()
-    // .contentType(MediaType.TEXT_PLAIN)
-    // .body(bodyString);
+    }
 
-    // }
+    public String nextGroup() throws Exception {
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-    // @MessageMapping("/nextgroup")
-    // @SendToUser("/queue/result")
-    // public @ResponseBody ResponseEntity<String> nextgroup() throws Exception {
-    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+        // Move to the next module group. If not possible, it will return the same set
+        // of modules
+        moduleGroups.nextGroup();
 
-    // // Move to the next module group. If not possible, it will return the same
-    // set
-    // // of modules
-    // moduleGroups.nextGroup();
+        // Return the parameters for these modules
+        return processGroup();
 
-    // // Return the parameters for these modules
-    // return processgroup();
+    }
 
-    // }
+    public boolean hasNextGroup() throws Exception {
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-    // @MessageMapping("/hasnextgroup")
-    // @SendToUser("/queue/nextstatus")
-    // public @ResponseBody ResponseEntity<String> hasnextgroup() throws Exception {
-    // ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+        return moduleGroups != null ? moduleGroups.hasNextGroup() : false;
 
-    // String bodyString = moduleGroups != null ?
-    // String.valueOf(moduleGroups.hasNextGroup()) : "";
-
-    // // Return the parameters for these modules
-    // return
-    // ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(bodyString);
-
-    // }
-    // }
+    }
 }

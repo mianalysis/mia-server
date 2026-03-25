@@ -64,9 +64,9 @@ public class AddPathsToMetadata extends GlobalVariables {
         if (workflowName.endsWith("mia"))
             workflowName = workflowName.substring(0, workflowName.length() - 4);
 
-        workspace.getMetadata().put("ImagesPath", "/app/mia/images/");
-        workspace.getMetadata().put("ThumbnailsPath", "/app/mia/thumbnails/");
-        workspace.getMetadata().put("WorkflowsPath", "/app/mia/workflows/");
+        workspace.getMetadata().put("ImagesPath", "/app/mia-for-schools/mia/images/");
+        workspace.getMetadata().put("ThumbnailsPath", "/app/mia-for-schools/mia/thumbnails/");
+        workspace.getMetadata().put("WorkflowsPath", "/app/mia-for-schools/mia/workflows/");
 
         return Status.PASS;
 
@@ -90,9 +90,9 @@ public class AddPathsToMetadata extends GlobalVariables {
             workflowName = workflowName.substring(0, workflowName.length() - 4);
 
         globalVariables.put(new StringP("NAME",this,"WorkflowName"), workflowName);
-        globalVariables.put(new StringP("NAME",this,"ImagesPath"), "/app/mia/images/");
-        globalVariables.put(new StringP("NAME",this,"ThumbnailsPath"), "/app/mia/thumbnails/");
-        globalVariables.put(new StringP("NAME",this,"WorkflowsPath"), "/app/mia/workflows/");
+        globalVariables.put(new StringP("NAME",this,"ImagesPath"), "/app/mia-for-schools/mia/images/");
+        globalVariables.put(new StringP("NAME",this,"ThumbnailsPath"), "/app/mia-for-schools/mia/thumbnails/");
+        globalVariables.put(new StringP("NAME",this,"WorkflowsPath"), "/app/mia-for-schools/mia/workflows/");
 
         return parameters;
 
