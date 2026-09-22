@@ -38,14 +38,6 @@ public class Initialiser {
             MIA.setUIService(uiService);
 
             scriptService.getIndex().add(new BeanshellScriptLanguage());
-            System.out.println("Initialised Beanshell");
-            // scriptService.getIndex().add(new GroovyScriptLanguage());
-            // System.out.println("Initialised Groovy");
-            // scriptService.getIndex().add(new IJ1MacroLanguage());
-            // System.out.println("Initialised IJ1");
-            // scriptService.getIndex().add(new JythonScriptLanguage());
-            // System.out.println("Initialised Jython");
-            System.out.println("Script service index: " + scriptService.getIndex());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,9 +53,6 @@ public class Initialiser {
         } catch (JSONException | IOException e) {
             e.printStackTrace();
         }
-
-        System.out.println("MIA initialised");
-
     }
 
     // @Override

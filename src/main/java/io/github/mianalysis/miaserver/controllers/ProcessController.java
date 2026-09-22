@@ -2,8 +2,6 @@ package io.github.mianalysis.miaserver.controllers;
 
 import java.io.File;
 
-import org.apache.commons.io.FilenameUtils;
-
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.InputControl;
@@ -81,9 +79,6 @@ class ProcessController {
             ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
             ProcessResult.getInstance().put("modules",
                     JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()));
-            File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-                    + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-            ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
             modules.execute(cloudWorkspace.getWorkspace());
 
             processActive = false;
@@ -113,10 +108,6 @@ class ProcessController {
             ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
             ProcessResult.getInstance().put("modules", JSONWriter
                     .getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace()));
-
-            File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-                    + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-            ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
 
             moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
 

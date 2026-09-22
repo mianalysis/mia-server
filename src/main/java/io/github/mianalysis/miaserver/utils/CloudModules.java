@@ -8,7 +8,6 @@ public class CloudModules {
     private Modules modules = null;
 
     public Modules initialiseModules(String workflowXML) {
-        System.out.println("Loading modules from XML");
         try {
             modules = AnalysisReader.loadModules(workflowXML);
         } catch (Exception e) {

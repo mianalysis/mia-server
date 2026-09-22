@@ -7,7 +7,6 @@ import org.jfree.data.json.impl.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
-import io.github.mianalysis.mia.module.AvailableModules;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
@@ -33,8 +32,6 @@ import io.github.mianalysis.miaserver.parameters.ParameterP;
 // import io.github.mianalysis.miaserver.utils.GraphStore;
 import io.github.mianalysis.miaserver.utils.JSONWriter;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
-import net.imagej.ImageJ;
-import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class CreateMessage extends Module {
@@ -63,20 +60,20 @@ public class CreateMessage extends Module {
 
     }
 
-    public static void main(String[] args) {
-        // The following must be called before initialising ImageJ
-        LegacyInjector.preinit();
+    // public static void main(String[] args) {
+    //     // The following must be called before initialising ImageJ
+    //     LegacyInjector.preinit();
 
-        // Creating a new instance of ImageJ
-        new ij.ImageJ();
+    //     // Creating a new instance of ImageJ
+    //     new ij.ImageJ();
 
-        // Launching MIA
-        new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
+    //     // Launching MIA
+    //     new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
-        // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(CreateMessage.class);
+    //     // Adding the current module to MIA's list of available modules.
+    //     AvailableModules.addModuleName(CreateMessage.class);
 
-    }
+    // }
 
     public CreateMessage(Modules modules) {
         super("Create message", modules);

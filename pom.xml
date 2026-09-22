@@ -58,17 +58,11 @@
 			<version>2.100.0</version>
 		</dependency>
 
-		<!-- <dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scripting-groovy</artifactId>
-			<version>1.0.0</version>
-		</dependency> -->
-
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
 			<version>2.14.0</version>
-			<exclusions>
+			<!-- <exclusions>
 				<exclusion>
 					<groupId>net.imagej</groupId>
 					<artifactId>imagej-plugins-uploader-ssh</artifactId>
@@ -109,10 +103,10 @@
 					<artifactId>script-editor-scala</artifactId>
 				</exclusion>
 
-				<!-- <exclusion>
+				<exclusion>
 					<groupId>org.scijava</groupId>
 					<artifactId>scripting-beanshell</artifactId>
-				</exclusion> -->
+				</exclusion>
 
 				<exclusion>
 					<groupId>org.scijava</groupId>
@@ -148,7 +142,7 @@
 					<groupId>org.scijava</groupId>
 					<artifactId>scripting-scala</artifactId>
 				</exclusion>
-			</exclusions>
+			</exclusions> -->
 		</dependency>
 
 		<dependency>
@@ -176,10 +170,16 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>ome-xml</artifactId>
+			<version>6.5.3</version>
+		</dependency>
+
+		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-core</artifactId>
 			<version>1.7.26</version>
-			<exclusions>
+			<!-- <exclusions>
 				<exclusion>
 					<groupId>io.scif</groupId>
 					<artifactId>scifio-ome-xml</artifactId>
@@ -195,7 +195,7 @@
 					<artifactId>imagej-ui-swing</artifactId>
 				</exclusion>
 
-				<!-- <exclusion>
+				<exclusion>
 					<groupId>ome</groupId>
 					<artifactId>bio-formats_plugins</artifactId>
 				</exclusion>
@@ -213,25 +213,25 @@
 				<exclusion>
 					<groupId>ome</groupId>
 					<artifactId>formats-bsd</artifactId>
-				</exclusion> -->
+				</exclusion>
 
-				<!-- <exclusion>
+				<exclusion>
 					<groupId>ome</groupId>
 					<artifactId>formats-gpl</artifactId>
-				</exclusion> -->
+				</exclusion>
 
 				<exclusion>
 					<groupId>org.scijava</groupId>
 					<artifactId>script-editor</artifactId>
 				</exclusion>
-			</exclusions>
+			</exclusions> -->
 		</dependency>
 
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-modules</artifactId>
 			<version>1.7.26</version>
-			<exclusions>
+			<!-- <exclusions>
 				<exclusion>
 					<groupId>net.imagej</groupId>
 					<artifactId>imagej-ui-awt</artifactId>
@@ -242,12 +242,12 @@
 					<artifactId>imagej-ui-swing</artifactId>
 				</exclusion>
 
-				<!-- <exclusion>
+				<exclusion>
 					<groupId>ome</groupId>
 					<artifactId>bio-formats_plugins</artifactId>
-				</exclusion> -->
+				</exclusion>
 
-				<!-- <exclusion>
+				<exclusion>
 					<groupId>ome</groupId>
 					<artifactId>formats-api</artifactId>
 				</exclusion>
@@ -255,12 +255,12 @@
 				<exclusion>
 					<groupId>ome</groupId>
 					<artifactId>formats-bsd</artifactId>
-				</exclusion> -->
+				</exclusion>
 
-				<!-- <exclusion>
+				<exclusion>
 					<groupId>ome</groupId>
 					<artifactId>formats-gpl</artifactId>
-				</exclusion> -->
+				</exclusion>
 
 				<exclusion>
 					<groupId>org.apache.xmlgraphics</groupId>
@@ -276,7 +276,7 @@
 					<groupId>org.scijava</groupId>
 					<artifactId>script-editor</artifactId>
 				</exclusion>
-			</exclusions>
+			</exclusions> -->
 		</dependency>
 
 		<dependency>
@@ -286,16 +286,16 @@
 			<scope>${scp2}</scope>
 		</dependency>
 
-		<!-- <dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy</artifactId>
-			<version>3.0.4</version>
-		</dependency> -->
-
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scripting-beanshell</artifactId>
 			<version>1.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>nz.ac.waikato.cms.weka</groupId>
+			<artifactId>weka-dev</artifactId>
+			<version>3.9.6</version>
 		</dependency>
 	</dependencies>
 
@@ -325,11 +325,6 @@
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<archive>
-						<manifest>
-							<mainClass>org.sample.Application</mainClass>
-						</manifest>
-					</archive>
 				</configuration>
 				<executions>
 					<execution>

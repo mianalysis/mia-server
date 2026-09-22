@@ -13,7 +13,7 @@ public class ModuleGroup {
     int startIdx = -1;
     int endIdx = -1;
     String title = "";
-    String description = "";    
+    String description = "";
 
     public ModuleGroup(int startIdx, int endIdx, String title, String description) {
         this.startIdx = startIdx;
@@ -33,7 +33,7 @@ public class ModuleGroup {
     public String getTitle() {
         return title;
     }
-    
+
     public String getDescription() {
         return description;
     }
@@ -45,7 +45,7 @@ public class ModuleGroup {
 
         for (int idx = startIdx; idx < endIdx; idx++)
             groupModules.add(modules.get(idx));
-        
+
         return groupModules;
 
     }
@@ -88,6 +88,6 @@ public class ModuleGroup {
         }
 
         return true;
-        
+
     }
 }

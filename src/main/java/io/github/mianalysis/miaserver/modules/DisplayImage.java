@@ -2,7 +2,9 @@ package io.github.mianalysis.miaserver.modules;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 
 import javax.imageio.ImageIO;
 
@@ -25,6 +27,7 @@ import io.github.mianalysis.mia.object.image.Image;
 import io.github.mianalysis.mia.object.parameters.BooleanP;
 import io.github.mianalysis.mia.object.parameters.ChoiceP;
 import io.github.mianalysis.mia.object.parameters.InputImageP;
+import io.github.mianalysis.mia.object.parameters.ParameterGroup;
 import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
@@ -41,7 +44,9 @@ import net.imagej.patcher.LegacyInjector;
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class DisplayImage extends Module {
 
-    public static final String IMAGE = "Image to display";
+    public static final String ADD_IMAGE = "Add image";
+
+    public static final String IMAGE_TO_DISPLAY = "Image name";
 
     public static final String TYPE = "Type";
 
@@ -87,103 +92,114 @@ public class DisplayImage extends Module {
     }
 
     public JSONObject getCoreImageJSON(int hash, Workspace workspace) {
-        String imageName = parameters.getValue(IMAGE, workspace);
+        LinkedHashMap<Integer, Parameters> collection = parameters.getValue(ADD_IMAGE, workspace);
         boolean showChannelControls = parameters.getValue(SHOW_CHANNEL_CONTROLS, workspace);
         boolean showProbeControl = parameters.getValue(SHOW_PROBE_CONTROL, workspace);
         boolean showSelectControl = parameters.getValue(SHOW_SELECT_CONTROL, workspace);
         boolean showZoomControl = parameters.getValue(SHOW_ZOOM_CONTROL, workspace);
         String defaultControl = parameters.getValue(DEFAULT_CONTROl, workspace);
 
+        StringBuilder sb = new StringBuilder();
+        for (Parameters currParameters:collection.values())
+            sb.append((String) currParameters.getValue(IMAGE_TO_DISPLAY, workspace));
+
         JSONObject imageJSON = new JSONObject();
-        imageJSON.put("name", imageName);
+        imageJSON.put("name", sb.toString());
         imageJSON.put("hashcode", hash);
         imageJSON.put("showchannelcontrols", showChannelControls);
         imageJSON.put("showprobecontrol", showProbeControl);
         imageJSON.put("showselectcontrol", showSelectControl);
         imageJSON.put("showzoomcontrol", showZoomControl);
         imageJSON.put("defaultcontrol", defaultControl);
+        imageJSON.put("imagetype","composite");
 
         return imageJSON;
 
     }
 
-    public JSONObject getImageJSON(Image image, int hash, Workspace workspace) throws InterruptedException {
+    public JSONObject getImageJSON(ArrayList<Image> imagesToDisplay, int hash, Workspace workspace)
+            throws InterruptedException {
         JSONObject imageJSON = getCoreImageJSON(hash, workspace);
 
         JSONArray channelArray = new JSONArray();
 
-        ImagePlus ipl = image.getImagePlus();
-        ImageProcessor ipr = ipl.getProcessor();
+        int i = 0;
+        for (Image image : imagesToDisplay) {
+            ImagePlus ipl = image.getImagePlus();
+            ImageProcessor ipr = ipl.getProcessor();
 
-        ipl.setDisplayMode(IJ.COMPOSITE);
+            LUT[] luts = ipl.getLuts();
 
-        LUT[] luts = ipl.getLuts();
+            ImagePlus[] channels = ChannelSplitter.split(ipl);
 
-        ImagePlus[] channels = ChannelSplitter.split(ipl);
+            for (int c = 0; c < channels.length; c++) {
+                JSONObject channelObject = new JSONObject();
 
-        for (int c = 0; c < channels.length; c++) {
-            JSONObject channelObject = new JSONObject();
+                // Adding pixel information
+                ipr = channels[c].getProcessor();
+                channelObject.put("pixels", getChannelString(ipr));
 
-            // Adding pixel information
-            ipr = channels[c].getProcessor();
-            channelObject.put("pixels", getChannelString(ipr));
+                // Adding LUT information
+                LUT lut = luts[c];
 
-            // Adding LUT information
-            LUT lut = luts[c];
+                byte[] reds = new byte[256];
+                lut.getReds(reds);
+                channelObject.put("red", reds[255] & 0xFF);
 
-            byte[] reds = new byte[256];
-            lut.getReds(reds);
-            channelObject.put("red", reds[255] & 0xFF);
+                byte[] greens = new byte[256];
+                lut.getGreens(greens);
+                channelObject.put("green", greens[255] & 0xFF);
 
-            byte[] greens = new byte[256];
-            lut.getGreens(greens);
-            channelObject.put("green", greens[255] & 0xFF);
+                byte[] blues = new byte[256];
+                lut.getBlues(blues);
+                channelObject.put("blue", blues[255] & 0xFF);
 
-            byte[] blues = new byte[256];
-            lut.getBlues(blues);
-            channelObject.put("blue", blues[255] & 0xFF);
+                channelObject.put("strength", 1);
+                channelObject.put("index", i);  // Index is based on all channels in all images
 
-            channelObject.put("strength", 1);
-            channelObject.put("index", c);
+                channelArray.put(channelObject);
 
-            channelArray.put(channelObject);
+                i++;
 
+            }
+
+            if (ipl.getOverlay() != null) {
+                ImagePlus blankIpl = IJ.createImage("Overlay", ipl.getWidth(), ipl.getHeight(), 1, 8);
+                blankIpl.setOverlay(ipl.getOverlay().duplicate());
+                ImagePlus overlayIpl = blankIpl.flatten();
+
+                JSONObject channelObject = new JSONObject();
+
+                // Adding pixel information
+                ipr = overlayIpl.getProcessor();
+                channelObject.put("pixels", getChannelString(ipr));
+
+                // Adding LUT information
+                LUT lut = ipl.getLuts()[0];
+
+                byte[] reds = new byte[256];
+                lut.getReds(reds);
+                channelObject.put("red", reds[255] & 0xFF);
+
+                byte[] greens = new byte[256];
+                lut.getGreens(greens);
+                channelObject.put("green", greens[255] & 0xFF);
+
+                byte[] blues = new byte[256];
+                lut.getBlues(blues);
+                channelObject.put("blue", blues[255] & 0xFF);
+
+                channelObject.put("strength", 1);
+                channelObject.put("index", channels.length);
+
+                channelArray.put(channelObject);
+
+                i++;
+
+            }
         }
 
         imageJSON.put("channels", channelArray);
-
-        if (ipl.getOverlay() != null) {
-            ImagePlus blankIpl = IJ.createImage("Overlay", ipl.getWidth(), ipl.getHeight(), 1, 8);
-            blankIpl.setOverlay(ipl.getOverlay().duplicate());
-            ImagePlus overlayIpl = blankIpl.flatten();
-
-            JSONObject channelObject = new JSONObject();
-
-            // Adding pixel information
-            ipr = overlayIpl.getProcessor();
-            channelObject.put("pixels", getChannelString(ipr));
-
-            // Adding LUT information
-            LUT lut = ipl.getLuts()[0];
-
-            byte[] reds = new byte[256];
-            lut.getReds(reds);
-            channelObject.put("red", reds[255] & 0xFF);
-
-            byte[] greens = new byte[256];
-            lut.getGreens(greens);
-            channelObject.put("green", greens[255] & 0xFF);
-
-            byte[] blues = new byte[256];
-            lut.getBlues(blues);
-            channelObject.put("blue", blues[255] & 0xFF);
-
-            channelObject.put("strength", 1);
-            channelObject.put("index", channels.length);
-
-            channelArray.put(channelObject);
-
-        }
 
         return imageJSON;
 
@@ -199,6 +215,35 @@ public class DisplayImage extends Module {
         }
 
         return Base64.getEncoder().encodeToString(stream.toByteArray());
+
+    }
+
+    public static int getImageHash(Image image) {
+        int hash = 0;
+
+        ImagePlus ipl = image.getImagePlus();
+
+        for (int c = 0; c < ipl.getNChannels(); c++) {
+            ipl.setC(c + 1);
+
+            ImageProcessor ipr = ipl.getChannelProcessor();
+
+            for (int x = 0; x < ipl.getWidth(); x++)
+                for (int y = 0; y < ipl.getHeight(); y++)
+                    hash = hash * 31 + ipr.get(x, y);
+
+        }
+
+        // Adding in LUT info
+        for (LUT lut : ipl.getLuts()) {
+            hash = hash * 31 + lut.hashCode();
+
+            for (int i = 0; i < 256; i++)
+                hash = hash * 31 + lut.getRGB(i) * i;
+
+        }
+
+        return hash;
 
     }
 
@@ -224,31 +269,17 @@ public class DisplayImage extends Module {
 
     @Override
     public Status process(Workspace workspace) {
-        String imageName = parameters.getValue(IMAGE, workspace);
-
-        Image image = workspace.getImage(imageName);
-
-        ImagePlus ipl = image.getImagePlus();
-
         int hash = 0;
-        for (int c = 0; c < ipl.getNChannels(); c++) {
-            ipl.setC(c + 1);
+        ArrayList<Image> imagesToDisplay = new ArrayList<>();
 
-            ImageProcessor ipr = ipl.getChannelProcessor();
+        LinkedHashMap<Integer, Parameters> collection = parameters.getValue(ADD_IMAGE, workspace);
 
-            for (int x = 0; x < ipl.getWidth(); x++)
-                for (int y = 0; y < ipl.getHeight(); y++)
-                    hash = hash * 31 + ipr.get(x, y);
+        for (Parameters currParameters : collection.values()) {
+            String imageName = currParameters.getValue(IMAGE_TO_DISPLAY, workspace);
+            Image image = workspace.getImage(imageName);
+            imagesToDisplay.add(image);
+            hash = hash + 31*getImageHash(image);
 
-        }
-        
-        // Adding in LUT info
-        for (LUT lut : ipl.getLuts()) {
-            hash = hash * 31 + lut.hashCode();
-
-            for (int i=0;i<256;i++)
-                hash = hash * 31 + lut.getRGB(i)*i;
-            
         }
 
         // Checking if this hash is already present. If it is, don't bother updating
@@ -261,7 +292,8 @@ public class DisplayImage extends Module {
                 ProcessResult.getInstance().put("image", imageJSON);
 
                 if (showOutput)
-                    image.show();
+                    for (Image image : imagesToDisplay)
+                        image.show();
 
                 return Status.PASS;
 
@@ -270,7 +302,7 @@ public class DisplayImage extends Module {
 
         // Otherwise, proceed as usual
         try {
-            JSONObject imageJSON = getImageJSON(image, hash, workspace);
+            JSONObject imageJSON = getImageJSON(imagesToDisplay, hash, workspace);
             workspace.getMetadata().put("ImageHash", hash);
             ProcessResult.getInstance().put("image", imageJSON);
         } catch (Exception e) {
@@ -278,7 +310,8 @@ public class DisplayImage extends Module {
         }
 
         if (showOutput)
-            image.show();
+            for (Image image : imagesToDisplay)
+                image.show();
 
         return Status.PASS;
 
@@ -286,7 +319,10 @@ public class DisplayImage extends Module {
 
     @Override
     protected void initialiseParameters() {
-        parameters.add(new InputImageP(IMAGE, this));
+        Parameters templateParameters = new Parameters();
+        templateParameters.add(new InputImageP(IMAGE_TO_DISPLAY, this));
+        parameters.add(new ParameterGroup(ADD_IMAGE, this, templateParameters, 1));
+        
         parameters.add(new BooleanP(SHOW_CHANNEL_CONTROLS, this, false));
         parameters.add(new BooleanP(SHOW_PROBE_CONTROL, this, false));
         parameters.add(new BooleanP(SHOW_SELECT_CONTROL, this, false));

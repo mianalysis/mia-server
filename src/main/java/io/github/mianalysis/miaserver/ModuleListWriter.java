@@ -10,12 +10,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import io.github.mianalysis.mia.module.AvailableModules;
+import net.imagej.patcher.LegacyInjector;
 
 /**
  * Class to write a list of all available modules.  This is read by the server to determine the list of available modules.
  */
 public class ModuleListWriter {
     public static void main(String[] args) {
+        LegacyInjector.preinit();
         ModuleListWriter.writeModuleList();
     }
 
