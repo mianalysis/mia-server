@@ -1,5 +1,6 @@
 package io.github.mianalysis.miaserver.utils;
 
+import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.object.Workspace;
@@ -7,7 +8,6 @@ import io.github.mianalysis.mia.object.parameters.ParameterGroup;
 import io.github.mianalysis.mia.object.parameters.Parameters;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
 import io.github.mianalysis.mia.object.system.Status;
-import io.github.mianalysis.mia.process.analysishandling.AnalysisTester;
 
 public class ModuleGroup {
     int startIdx = -1;
@@ -51,7 +51,13 @@ public class ModuleGroup {
     }
 
     public boolean execute(Modules modules, Workspace workspace) {
-        AnalysisTester.testModules(modules, workspace, null);
+        // long t1 = System.currentTimeMillis();
+        // MIA.log.writeDebug("Running analysis tester from ModuleGroup::execute");
+        MIA.log.writeDebug("ModuleGroup::execute may need to have module testing reinstated to some degree for available parameters to become visible.");
+        // AnalysisTester_Mod.testModules(modules, workspace, null);
+        // long t2 = System.currentTimeMillis();
+
+        // MIA.log.writeDebug("Group test time (ms): " + (t2 - t1));
 
         for (int idx = startIdx; idx < endIdx; idx++) {
             Module module = modules.get(idx);
@@ -81,6 +87,7 @@ public class ModuleGroup {
                             return false;
                     }
                 } catch (Exception e1) {
+                    MIA.log.writeError(e1);
                     e1.printStackTrace();
                     return false;
                 }

@@ -1,19 +1,14 @@
 package io.github.mianalysis.miaserver.modules;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Base64;
-
-import javax.imageio.ImageIO;
-
 import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
 import ij.ImagePlus;
+import ij.plugin.RGBStackConverter;
+import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
-import io.github.mianalysis.mia.module.AvailableModules;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
@@ -32,8 +27,6 @@ import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
 import io.github.mianalysis.miaserver.ServerCategories;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
-import net.imagej.ImageJ;
-import net.imagej.patcher.LegacyInjector;
 
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class DisplaySimpleImage extends Module {
@@ -140,7 +133,9 @@ public class DisplaySimpleImage extends Module {
         Image image = workspace.getImage(inputImageName);
         // int hash = 31 * getImageHash(image);
         int hash = 1;
-        JSONObject imageJSON = getCoreImageJSON(hash, workspace);
+        ProcessResult processResult = ProcessResult.getInstance();
+       JSONObject imageJSON = getCoreImageJSON(hash, workspace);
+       processResult.image = imageJSON;
 
         // Checking if this hash is already present. If it is, don't bother updating
         // pixel information
@@ -172,17 +167,31 @@ public class DisplaySimpleImage extends Module {
 
         // imageJSON.put("pixels",
         // Base64.getEncoder().encodeToString(stream.toByteArray()));
-        imageJSON.put("pixels", image.getImagePlus().getProcessor().getPixels());
+        ImagePlus ipl = image.getImagePlus().duplicate();
+        RGBStackConverter.convertToRGB(ipl);
+        ColorProcessor ipr = (ColorProcessor) ipl.getProcessor();
+        int imSize = ipr.getWidth() * ipr.getHeight();
+        byte[] reds = new byte[imSize];
+        byte[] greens = new byte[imSize];
+        byte[] blues = new byte[imSize];
+        ipr.getRGB(reds, greens, blues);
+        // imageJSON.put("reds", reds);
+        // imageJSON.put("greens", greens);
+        // imageJSON.put("blues", blues);
+        processResult.reds = reds;
+        processResult.greens = greens;
+        processResult.blues = blues;
+
         workspace.getMetadata().put("ImageHash", hash);
         // } catch (Exception e) {
         // imageJSON.put("Error", e.getMessage());
         // e.printStackTrace();
         // }
 
-        ProcessResult.getInstance().put("image", imageJSON);
+        // ProcessResult.getInstance().put("image", imageJSON);
 
         if (showOutput)
-            image.show();
+            ipl.show();
 
         return Status.PASS;
 

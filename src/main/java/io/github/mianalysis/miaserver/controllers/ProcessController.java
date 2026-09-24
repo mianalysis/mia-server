@@ -2,6 +2,7 @@ package io.github.mianalysis.miaserver.controllers;
 
 import java.io.File;
 
+import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.InputControl;
@@ -28,7 +29,7 @@ class ProcessController {
 
     private boolean processActive = false;
 
-    public String setWorkflow(String workflowXML, String workflowPath) throws Exception {
+    public ProcessResult setWorkflow(String workflowXML, String workflowPath) throws Exception {
         try {
             if (cloudModules == null)
                 cloudModules = new CloudModules();
@@ -60,11 +61,11 @@ class ProcessController {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return "";
+            return null;
         }
     }
 
-    public String process() throws Exception {
+    public ProcessResult process() throws Exception {
         if (processActive) {
             System.out.println("Process busy");
             return null;
@@ -76,9 +77,8 @@ class ProcessController {
             File workflowFile = new File(modules.getAnalysisFilename());
 
             ProcessResult.getInstance().clear();
-            ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
-            ProcessResult.getInstance().put("modules",
-                    JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()));
+            ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowDisplayName(workflowFile);
+            ProcessResult.getInstance().modules = JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace());
             modules.execute(cloudWorkspace.getWorkspace());
 
             processActive = false;
@@ -88,10 +88,13 @@ class ProcessController {
             processActive = false;
         }
 
-        return ProcessResult.getInstance().toString();
+        ProcessResult result = ProcessResult.getInstance();
+
+        return result;
+
     }
 
-    public String processGroup() throws Exception {
+    public ProcessResult processGroup() throws Exception {
         if (processActive) {
             System.out.println("Process busy");
             return null;
@@ -105,11 +108,16 @@ class ProcessController {
             File workflowFile = new File(modules.getAnalysisFilename());
 
             ProcessResult.getInstance().clear();
-            ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
-            ProcessResult.getInstance().put("modules", JSONWriter
-                    .getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace()));
+            ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowDisplayName(workflowFile);
+            ProcessResult.getInstance().modules = JSONWriter
+                    .getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace());
 
+            // SLOW PROCESS
+            long t1 = System.currentTimeMillis();
             moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
+            long t2 = System.currentTimeMillis();
+
+            MIA.log.writeDebug("Group process time (ms): " + (t2 - t1));
 
             processActive = false;
 
@@ -118,11 +126,15 @@ class ProcessController {
             processActive = false;
         }
 
-        return ProcessResult.getInstance().toString();
+        // VERY SLOW PROCESS
+        ProcessResult result = ProcessResult.getInstance();
+
+        return result;
 
     }
 
-    public String setParameter(String moduleID, String parameterName, String parameterValue, String parentGroupName,
+    public ProcessResult setParameter(String moduleID, String parameterName, String parameterValue,
+            String parentGroupName,
             int groupCollectionNumber) throws Exception {
         Modules modules = cloudModules.getModules();
         ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
@@ -167,7 +179,7 @@ class ProcessController {
 
     }
 
-    public String previousGroup() throws Exception {
+    public ProcessResult previousGroup() throws Exception {
         ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
         // Move to the previous module group. If not possible, it will return the same
@@ -186,7 +198,7 @@ class ProcessController {
 
     }
 
-    public String nextGroup() throws Exception {
+    public ProcessResult nextGroup() throws Exception {
         ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
         // Move to the next module group. If not possible, it will return the same set

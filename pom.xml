@@ -293,6 +293,13 @@
 		</dependency>
 
 		<dependency>
+            <groupId>mpicbg</groupId>
+            <artifactId>mpicbg</artifactId>
+            <version>1.5.0</version>
+            <scope>${scp2}</scope>
+        </dependency>
+
+		<dependency>
 			<groupId>nz.ac.waikato.cms.weka</groupId>
 			<artifactId>weka-dev</artifactId>
 			<version>3.9.6</version>

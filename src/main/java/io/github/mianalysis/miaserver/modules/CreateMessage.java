@@ -2,8 +2,8 @@ package io.github.mianalysis.miaserver.modules;
 
 import java.util.LinkedHashMap;
 
-import org.jfree.data.json.impl.JSONArray;
-import org.jfree.data.json.impl.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
@@ -128,10 +128,10 @@ public class CreateMessage extends Module {
                     fragment.put("data", text);
                     break;
             }
-            jsonArray.add(fragment);
+            jsonArray.put(fragment);
         }
 
-        ProcessResult.getInstance().put("message", jsonArray);
+        ProcessResult.getInstance().message = jsonArray;
 
         return Status.PASS;
 

@@ -23,6 +23,7 @@ import com.drew.lang.annotations.Nullable;
 
 import ij.IJ;
 import ij.ImagePlus;
+import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.OutputControl;
@@ -148,6 +149,7 @@ public class JSONWriter {
     public static JSONArray getModulesJSON(Modules modules, Workspace workspace) {
         loadSeparator = new GUISeparator(modules);
 
+        MIA.log.writeDebug("Running analysis tester from JSONWriter::getModulesJSON");
         AnalysisTester.testModule(modules.getInputControl(), modules);
         AnalysisTester.testModule(modules.getOutputControl(), modules);
         AnalysisTester.testModules(modules, workspace, null);
