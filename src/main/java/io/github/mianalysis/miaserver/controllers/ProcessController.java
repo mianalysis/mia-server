@@ -18,7 +18,7 @@ import io.github.mianalysis.miaserver.utils.JSONWriter;
 import io.github.mianalysis.miaserver.utils.ModuleGroups;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
 
-class ProcessController {
+public class ProcessController {
     public static void main(String[] args) {
         new Initialiser().initialise();
     }

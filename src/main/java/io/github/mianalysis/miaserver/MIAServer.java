@@ -1,28 +1,28 @@
-package io.github.mianalysis.miaserver;
+// package io.github.mianalysis.miaserver;
 
-import java.io.File;
+// import java.io.File;
 
-import io.github.mianalysis.mia.module.AvailableModules;
-import io.github.mianalysis.mia.module.Module;
-import net.imagej.patcher.LegacyInjector;
+// import io.github.mianalysis.mia.module.AvailableModules;
+// import io.github.mianalysis.mia.module.Module;
+// import net.imagej.patcher.LegacyInjector;
 
-public class MIAServer {
-	static {
-        LegacyInjector.preinit();
-    }
+// public class MIAServer {
+// 	static {
+//         LegacyInjector.preinit();
+//     }
 	
-	public static void main(String[] args) {
-		File[] moduleFiles = new File("src/main/java/io/github/mianalysis/miaserver/modules/").listFiles();
+// 	public static void main(String[] args) {
+// 		File[] moduleFiles = new File("src/main/java/io/github/mianalysis/miaserver/modules/").listFiles();
 
-        // Adding the new modules to MIA's list of available modules.
-        for (File moduleFile : moduleFiles) {
-            try {
-                String className = "io.github.mianalysis.miaserver.modules."
-                        + moduleFile.getName().replace(".java", "");
-                AvailableModules.addModuleName((Class<Module>) Class.forName(className));
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-	}
-}
+//         // Adding the new modules to MIA's list of available modules.
+//         for (File moduleFile : moduleFiles) {
+//             try {
+//                 String className = "io.github.mianalysis.miaserver.modules."
+//                         + moduleFile.getName().replace(".java", "");
+//                 AvailableModules.addModuleName((Class<Module>) Class.forName(className));
+//             } catch (ClassNotFoundException e) {
+//                 e.printStackTrace();
+//             }
+//         }
+// 	}
+// }

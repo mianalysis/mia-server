@@ -62,7 +62,7 @@
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
 			<version>2.14.0</version>
-			<!-- <exclusions>
+			<exclusions>
 				<exclusion>
 					<groupId>net.imagej</groupId>
 					<artifactId>imagej-plugins-uploader-ssh</artifactId>
@@ -142,7 +142,7 @@
 					<groupId>org.scijava</groupId>
 					<artifactId>scripting-scala</artifactId>
 				</exclusion>
-			</exclusions> -->
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -179,7 +179,7 @@
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-core</artifactId>
 			<version>1.7.26</version>
-			<!-- <exclusions>
+			<exclusions>
 				<exclusion>
 					<groupId>io.scif</groupId>
 					<artifactId>scifio-ome-xml</artifactId>
@@ -224,14 +224,19 @@
 					<groupId>org.scijava</groupId>
 					<artifactId>script-editor</artifactId>
 				</exclusion>
-			</exclusions> -->
+			</exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>io.github.mianalysis</groupId>
 			<artifactId>mia-modules</artifactId>
 			<version>1.7.26</version>
-			<!-- <exclusions>
+			<exclusions>
+				<exclusion>
+					<groupId>io.github.mianalysis</groupId>
+					<artifactId>mia-elki</artifactId>
+				</exclusion>
+
 				<exclusion>
 					<groupId>net.imagej</groupId>
 					<artifactId>imagej-ui-awt</artifactId>
@@ -276,7 +281,22 @@
 					<groupId>org.scijava</groupId>
 					<artifactId>script-editor</artifactId>
 				</exclusion>
-			</exclusions> -->
+
+				<exclusion>
+					<groupId>org.xerial</groupId>
+					<artifactId>sqlite-jdbc</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>com.itextpdf</groupId>
+					<artifactId>itextpdf</artifactId>
+				</exclusion>
+
+				<exclusion>
+					<groupId>nz.ac.waikato.cms.weka</groupId>
+					<artifactId>weka-dev</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -293,17 +313,17 @@
 		</dependency>
 
 		<dependency>
-            <groupId>mpicbg</groupId>
-            <artifactId>mpicbg</artifactId>
-            <version>1.5.0</version>
-            <scope>${scp2}</scope>
-        </dependency>
+			<groupId>mpicbg</groupId>
+			<artifactId>mpicbg</artifactId>
+			<version>1.5.0</version>
+			<!-- <scope>${scp2}</scope> -->
+		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<groupId>nz.ac.waikato.cms.weka</groupId>
 			<artifactId>weka-dev</artifactId>
 			<version>3.9.6</version>
-		</dependency>
+		</dependency> -->
 	</dependencies>
 
 	<build>

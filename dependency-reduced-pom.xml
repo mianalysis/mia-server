@@ -11,7 +11,6 @@
         <artifactId>maven-jar-plugin</artifactId>
         <version>2.6</version>
         <configuration>
-          <finalName>MIA_SERVER_-${project.version}</finalName>
           <archive>
             <manifest>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
@@ -23,13 +22,33 @@
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.5.0</version>
+        <version>3.6.0</version>
         <executions>
           <execution>
             <phase>package</phase>
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <finalName>MIA_SERVER_-${project.version}</finalName>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>**/*.dll</exclude>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer>
+                  <mainClass>io.github.mianalysis.mia.miaserver.MIALocalServer</mainClass>
+                </transformer>
+                <transformer />
+              </transformers>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -59,9 +78,9 @@
     </dependency>
   </dependencies>
   <properties>
-    <java.version>8</java.version>
-    <scp2>compile</scp2>
-    <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
+    <java.version>8</java.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <scp2>compile</scp2>
   </properties>
 </project>
