@@ -25,6 +25,7 @@ public class Initialiser {
 
     public void initialise() {
         MIA.setHeadless(false);
+        StarCounter.reset();
 
         try {
             Context context = new Context(PluginService.class, ScriptService.class, UIService.class);
@@ -59,4 +60,5 @@ public class Initialiser {
     // public void run() {
     // throw new UnsupportedOperationException("Unimplemented method 'run'");
     // }
+    
 }

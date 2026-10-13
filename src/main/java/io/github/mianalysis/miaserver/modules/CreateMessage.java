@@ -146,7 +146,7 @@ public class CreateMessage extends Module {
         collection.add(new InputGraphP(GRAPH, this));
         collection.add(new ModuleP(MODULE, this, false));
         collection.add(new ParameterP(PARAMETER, this, "", ""));
-        collection.add(new TextAreaP(TEXT, this, true));
+        collection.add(new TextAreaP(TEXT, this, true, 100));
 
         parameters.add(new ParameterGroup(ADD_OUTPUT, this, collection, 1, getUpdaterAndGetter()));
 

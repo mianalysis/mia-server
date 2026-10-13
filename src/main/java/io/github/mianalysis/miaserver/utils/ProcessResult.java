@@ -8,6 +8,9 @@ public class ProcessResult {
     public JSONArray message = null;
     public JSONArray modules = null;
     public JSONObject image = null;
+    public boolean hasPrevious = false;
+    public boolean hasNext = false;
+
     public byte[] reds = null;
     public byte[] greens = null;
     public byte[] blues = null;
@@ -39,6 +42,14 @@ public class ProcessResult {
 
     public JSONObject getImage() {
         return image;
+    }
+
+    public boolean hasPreviousGroup() {
+        return hasPrevious;
+    }
+
+    public boolean hasNextGroup() {
+        return hasNext;
     }
 
     public byte[] getReds() {

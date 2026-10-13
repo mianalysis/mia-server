@@ -111,6 +111,8 @@ public class ProcessController {
             ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowDisplayName(workflowFile);
             ProcessResult.getInstance().modules = JSONWriter
                     .getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace());
+            ProcessResult.getInstance().hasPrevious = hasPreviousGroup();
+            ProcessResult.getInstance().hasNext = hasNextGroup();
 
             // SLOW PROCESS
             long t1 = System.currentTimeMillis();

@@ -73,7 +73,6 @@ public class DisplaySimpleImage extends Module {
         imageJSON.put("showselectcontrol", showSelectControl);
         imageJSON.put("showzoomcontrol", showZoomControl);
         imageJSON.put("defaultcontrol", defaultControl);
-        imageJSON.put("imagetype", "simple");
 
         return imageJSON;
 
