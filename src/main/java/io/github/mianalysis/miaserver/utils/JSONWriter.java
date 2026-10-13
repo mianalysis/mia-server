@@ -1,7 +1,10 @@
 package io.github.mianalysis.miaserver.utils;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,6 +23,7 @@ import com.drew.lang.annotations.Nullable;
 
 import ij.IJ;
 import ij.ImagePlus;
+import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.OutputControl;
@@ -35,6 +39,26 @@ import io.github.mianalysis.miaserver.parameters.ClickListenerP;
 
 public class JSONWriter {
     private static GUISeparator loadSeparator;
+
+    public static String getAvailableWorkfowsJSON(String root) {
+        String workflowsPath = root+"mia/workflows/workflows.json";
+
+        BufferedReader reader;
+        try {
+            reader = new BufferedReader(new FileReader(workflowsPath));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        reader.lines().forEach(sb::append);
+
+        JSONObject jsonObject = new JSONObject(sb.toString());
+
+        return jsonObject.toString();
+
+    }
 
     public static JSONObject getWorkflowsJSON(Collection<File> workflows) {
         JSONObject json = new JSONObject();
@@ -77,7 +101,7 @@ public class JSONWriter {
         
         jsonObject.put("fullname", getWorkflowFullName(workflowFile));
         jsonObject.put("displayname", getWorkflowDisplayName(workflowFile));
-        jsonObject.put("thumbnail", getThumbnailPNGString(workflowFile));
+        // jsonObject.put("thumbnail", getThumbnailPNGString(workflowFile));
 
         File bannerFile = new File(workflowFile.getParentFile().getParent() + "/banner/"
                 + FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
@@ -103,19 +127,16 @@ public class JSONWriter {
 
     }
 
-    public static String getThumbnailPNGString(File workflowFile) {
-        String thumbnailName = workflowFile.getParentFile().getParent() + "/thumbnails/"
-                + FilenameUtils.getBaseName(workflowFile.getName()) + ".png";
-        if (!new File(thumbnailName).exists()) {
-            System.err.println("ERROR: Thumbnail not found for " + workflowFile.getName());
+    public static String getThumbnailPNGString(String thumbnailPath) throws Exception {
+        if (!new File(thumbnailPath).exists()) {
+            System.err.println("ERROR: Thumbnail not found for " + new File(thumbnailPath).getName());
             return "data:image/png;base64,";
         }
 
-        ImagePlus ipl = IJ.openImage(thumbnailName);
+        ImagePlus ipl = IJ.openImage(thumbnailPath);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
-            // ipr.setLut(LUT.createLutFromColor(Color.WHITE));
             ImageIO.write(ipl.getBufferedImage(), "png", stream);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -128,6 +149,7 @@ public class JSONWriter {
     public static JSONArray getModulesJSON(Modules modules, Workspace workspace) {
         loadSeparator = new GUISeparator(modules);
 
+        MIA.log.writeDebug("Running analysis tester from JSONWriter::getModulesJSON");
         AnalysisTester.testModule(modules.getInputControl(), modules);
         AnalysisTester.testModule(modules.getOutputControl(), modules);
         AnalysisTester.testModules(modules, workspace, null);

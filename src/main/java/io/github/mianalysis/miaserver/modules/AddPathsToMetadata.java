@@ -4,10 +4,6 @@ import java.io.File;
 
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import io.github.mianalysis.miaserver.ServerCategories;
-import io.github.mianalysis.miaserver.beans.CloudWorkspace;
 
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
@@ -25,15 +21,13 @@ import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
 import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
-
+import io.github.mianalysis.miaserver.ServerCategories;
 /**
  * A template MIA module.
  */
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 
 public class AddPathsToMetadata extends GlobalVariables {
-    @Autowired
-	private CloudWorkspace cloudWorkspace;
 
     public static final String MESSAGE = "Message";
 
@@ -63,17 +57,16 @@ public class AddPathsToMetadata extends GlobalVariables {
         String workflowPath = modules.getAnalysisFilename();
 
         File workflowFile = new File(workflowPath);
-        if (!workflowFile.exists())
-            return Status.PASS;
+        // if (!workflowFile.exists())
+        //     return Status.PASS;
 
         String workflowName = workflowFile.getName();
         if (workflowName.endsWith("mia"))
             workflowName = workflowName.substring(0, workflowName.length() - 4);
 
-        String miaFolder = workflowFile.getParentFile().getParent();
-        workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
-        workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
-        workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
+        workspace.getMetadata().put("ImagesPath", "/app/mia-for-schools/mia/images/");
+        workspace.getMetadata().put("ThumbnailsPath", "/app/mia-for-schools/mia/thumbnails/");
+        workspace.getMetadata().put("WorkflowsPath", "/app/mia-for-schools/mia/workflows/");
 
         return Status.PASS;
 
@@ -89,23 +82,17 @@ public class AddPathsToMetadata extends GlobalVariables {
         String workflowPath = modules.getAnalysisFilename();
 
         File workflowFile = new File(workflowPath);
-        if (!workflowFile.exists())
-            return parameters;
+        // if (!workflowFile.exists())
+        //     return parameters;
 
         String workflowName = workflowFile.getName();
         if (workflowName.endsWith("mia"))
             workflowName = workflowName.substring(0, workflowName.length() - 4);
-        // workspace.getMetadata().put("WorkflowName", workflowName);
-
-        String miaFolder = workflowFile.getParentFile().getParent();
-        // workspace.getMetadata().put("ImagesPath", miaFolder + "/images/");
-        // workspace.getMetadata().put("ThumbnailsPath", miaFolder + "/thumbnails/");
-        // workspace.getMetadata().put("WorkflowsPath", miaFolder + "/workflows/");
 
         globalVariables.put(new StringP("NAME",this,"WorkflowName"), workflowName);
-        globalVariables.put(new StringP("NAME",this,"ImagesPath"), miaFolder + "/images/");
-        globalVariables.put(new StringP("NAME",this,"ThumbnailsPath"), miaFolder + "/thumbnails/");
-        globalVariables.put(new StringP("NAME",this,"WorkflowsPath"), miaFolder + "/workflows/");
+        globalVariables.put(new StringP("NAME",this,"ImagesPath"), "/app/mia-for-schools/mia/images/");
+        globalVariables.put(new StringP("NAME",this,"ThumbnailsPath"), "/app/mia-for-schools/mia/thumbnails/");
+        globalVariables.put(new StringP("NAME",this,"WorkflowsPath"), "/app/mia-for-schools/mia/workflows/");
 
         return parameters;
 

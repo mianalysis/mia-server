@@ -1,18 +1,8 @@
 package io.github.mianalysis.miaserver.controllers;
 
 import java.io.File;
-import java.util.Collection;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ResponseBody;
-
+import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.core.InputControl;
@@ -20,229 +10,212 @@ import io.github.mianalysis.mia.module.system.GlobalVariables;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.parameters.ParameterGroup;
 import io.github.mianalysis.mia.object.parameters.abstrakt.Parameter;
-import io.github.mianalysis.miaserver.beans.CloudModuleGroups;
-import io.github.mianalysis.miaserver.beans.CloudModules;
-import io.github.mianalysis.miaserver.beans.CloudWorkspace;
-import io.github.mianalysis.miaserver.requests.SetParameterRequest;
-import io.github.mianalysis.miaserver.requests.SetWorkflowRequest;
+import io.github.mianalysis.miaserver.utils.CloudModuleGroups;
+import io.github.mianalysis.miaserver.utils.CloudModules;
+import io.github.mianalysis.miaserver.utils.CloudWorkspace;
+import io.github.mianalysis.miaserver.utils.Initialiser;
 import io.github.mianalysis.miaserver.utils.JSONWriter;
 import io.github.mianalysis.miaserver.utils.ModuleGroups;
 import io.github.mianalysis.miaserver.utils.ProcessResult;
 
-@Controller
 public class ProcessController {
-	@Autowired
-	private CloudWorkspace cloudWorkspace;
+    public static void main(String[] args) {
+        new Initialiser().initialise();
+    }
 
-	@Autowired
-	private CloudModules cloudModules;
+    private CloudWorkspace cloudWorkspace = new CloudWorkspace();
+    private CloudModules cloudModules = new CloudModules();
+    private CloudModuleGroups cloudModuleGroups = new CloudModuleGroups();
 
-	@Autowired
-	private CloudModuleGroups cloudModuleGroups;
+    private boolean processActive = false;
 
-	private boolean processActive = false;
+    public ProcessResult setWorkflow(String workflowXML, String workflowPath) throws Exception {
+        try {
+            if (cloudModules == null)
+                cloudModules = new CloudModules();
 
-	// @Resource(name = "getModules")
-	// private Modules modules;
+            if (cloudWorkspace == null)
+                cloudWorkspace = new CloudWorkspace();
 
-	@MessageMapping("/getworkflows")
-	@SendToUser("/queue/workflows")
-	public @ResponseBody ResponseEntity<String> getWorkflows() throws Exception {
-		String workflowsPath = "src/main/resources/mia/workflows/";
-		Collection<File> workflowFiles = FileUtils.listFiles(new File(workflowsPath), new String[] { "mia" }, false);
+            if (cloudModuleGroups == null)
+                cloudModuleGroups = new CloudModuleGroups();
 
-		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-				.body(JSONWriter.getWorkflowsJSON(workflowFiles).toString());
+            Modules modules = cloudModules.initialiseModules(workflowXML);
+            modules.setAnalysisFilename(workflowPath);
+            GlobalVariables.updateVariables(modules);
 
-	}
+            String inputPath = modules.getInputControl().getParameterValue(InputControl.INPUT_PATH, null);
+            Workspace workspace = cloudWorkspace.initialiseWorkspace(inputPath);
 
-	@MessageMapping("/setworkflow")
-	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<String> setworkflow(SetWorkflowRequest request) throws Exception {
-		String workflowPath = "src/main/resources/mia/workflows/" + request.getWorkflowName() + ".mia";
-		Modules modules = cloudModules.initialiseModules(workflowPath);
-		modules.setAnalysisFilename(workflowPath);
-		GlobalVariables.updateVariables(modules);
+            ModuleGroups moduleGroups = cloudModuleGroups.initialiseModuleGroups(modules);
 
-		String inputPath = modules.getInputControl().getParameterValue(InputControl.INPUT_PATH, null);
-		Workspace workspace = cloudWorkspace.initialiseWorkspace(inputPath);
+            ProcessResult.getInstance().clear();
 
-		ModuleGroups moduleGroups = cloudModuleGroups.initialiseModuleGroups(modules);
+            if (moduleGroups == null) {
+                return process();
+            } else {
+                if (moduleGroups.hasPreprocessingGroup())
+                    moduleGroups.getPreprocessingGroup().execute(modules, workspace);
 
-		ProcessResult.getInstance().clear();
+                return processGroup();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
-		if (moduleGroups == null) {
-			return process();
-		} else {
-			if (moduleGroups.hasPreprocessingGroup())
-				moduleGroups.getPreprocessingGroup().execute(modules, workspace);
+    public ProcessResult process() throws Exception {
+        if (processActive) {
+            System.out.println("Process busy");
+            return null;
+        }
 
-			return processgroup();
-		}
-	}
+        try {
+            processActive = true;
+            Modules modules = cloudModules.getModules();
+            File workflowFile = new File(modules.getAnalysisFilename());
 
-	@MessageMapping("/process")
-	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<String> process() throws Exception {
-		if (processActive)
-			return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
-					.body("busy");
+            ProcessResult.getInstance().clear();
+            ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowDisplayName(workflowFile);
+            ProcessResult.getInstance().modules = JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace());
+            modules.execute(cloudWorkspace.getWorkspace());
 
-		try {
-			processActive = true;
-			Modules modules = cloudModules.getModules();
-			File workflowFile = new File(modules.getAnalysisFilename());
+            processActive = false;
 
-			ProcessResult.getInstance().clear();
-			ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
-			ProcessResult.getInstance().put("modules",
-					JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace()));
-			File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-					+ FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-			ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
-			modules.execute(cloudWorkspace.getWorkspace());
+        } catch (Exception e) {
+            e.printStackTrace();
+            processActive = false;
+        }
 
-			processActive = false;
+        ProcessResult result = ProcessResult.getInstance();
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			processActive = false;
-		}
+        return result;
 
-		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ProcessResult.getInstance().toString());
-	}
+    }
 
-	@MessageMapping("/processgroup")
-	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<String> processgroup() throws Exception {
-		if (processActive)
-			return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("busy");
+    public ProcessResult processGroup() throws Exception {
+        if (processActive) {
+            System.out.println("Process busy");
+            return null;
+        }
 
-		try {
-			processActive = true;
+        try {
+            processActive = true;
 
-			Modules modules = cloudModules.getModules();
-			ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
-			File workflowFile = new File(modules.getAnalysisFilename());
+            Modules modules = cloudModules.getModules();
+            ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+            File workflowFile = new File(modules.getAnalysisFilename());
 
-			ProcessResult.getInstance().clear();
-			ProcessResult.getInstance().put("workflowName", JSONWriter.getWorkflowDisplayName(workflowFile));
-			ProcessResult.getInstance().put("modules", JSONWriter
-					.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace()));
+            ProcessResult.getInstance().clear();
+            ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowDisplayName(workflowFile);
+            ProcessResult.getInstance().modules = JSONWriter
+                    .getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace());
+            ProcessResult.getInstance().hasPrevious = hasPreviousGroup();
+            ProcessResult.getInstance().hasNext = hasNextGroup();
 
-			File backgroundFile = new File(workflowFile.getParentFile().getParent() + "/background/"
-					+ FilenameUtils.getBaseName(workflowFile.getName()) + ".json");
-			ProcessResult.getInstance().put("background", JSONWriter.getJSONFromFile(backgroundFile));
+            // SLOW PROCESS
+            long t1 = System.currentTimeMillis();
+            moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
+            long t2 = System.currentTimeMillis();
 
-			moduleGroups.getCurrentGroup().execute(modules, cloudWorkspace.getWorkspace());
+            MIA.log.writeDebug("Group process time (ms): " + (t2 - t1));
 
-			processActive = false;
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-			processActive = false;
-		}
+            processActive = false;
 
-		return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ProcessResult.getInstance().toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            processActive = false;
+        }
 
-	}
+        // VERY SLOW PROCESS
+        ProcessResult result = ProcessResult.getInstance();
 
-	@MessageMapping("/setparameter")
-	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<String> setparameter(SetParameterRequest request) throws Exception {
-		Modules modules = cloudModules.getModules();
-		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+        return result;
 
-		for (Module module : modules.values()) {
-			if (module.getModuleID().equals(request.getModuleID())) {
-				if (request.getParentGroupName() == null || request.getParentGroupName().equals("")) {
-					Parameter parameter = module.getParameter(request.getParameterName());
-					parameter.setValueFromString(request.getParameterValue());
-				} else {
-					ParameterGroup parentGroup = module.getParameter(request.getParentGroupName());
-					Parameter parameter = parentGroup.getCollections(true).get(request.getGroupCollectionNumber())
-							.getParameter(request.getParameterName());
-					parameter.setValueFromString(request.getParameterValue());
-				}
+    }
 
-				break;
-			}
-		}
+    public ProcessResult setParameter(String moduleID, String parameterName, String parameterValue,
+            String parentGroupName,
+            int groupCollectionNumber) throws Exception {
+        Modules modules = cloudModules.getModules();
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-		// Runtime runtime = Runtime.getRuntime();
-		// System.out.println("Memory used =
-		// "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users
-		// "+CloudWorkspace.getWorkspaceCount());
+        for (Module module : modules.values()) {
+            if (module.getModuleID().equals(moduleID)) {
+                if (parentGroupName == null ||
+                        parentGroupName.equals("")) {
+                    Parameter parameter = module.getParameter(parameterName);
+                    parameter.setValueFromString(parameterValue);
+                } else {
+                    Parameter parentGroup = module.getParameter(parentGroupName);
+                    Parameter parameter = ((ParameterGroup) parentGroup).getCollections(true).get(groupCollectionNumber)
+                            .getParameter(parameterName);
+                    parameter.setValueFromString(parameterValue);
+                }
 
-		// if (moduleGroups == null)
-		// return ResponseEntity.ok()
-		// .contentType(MediaType.APPLICATION_JSON)
-		// .body(JSONWriter.getModulesJSON(modules,
-		// cloudWorkspace.getWorkspace()).toString());
-		// else
-		// return ResponseEntity.ok()
-		// .contentType(MediaType.APPLICATION_JSON)
-		// .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
-		// cloudWorkspace.getWorkspace()).toString());
+                break;
+            }
+        }
 
-		if (moduleGroups == null)
-			return process();
-		else
-			return processgroup();
+        // Runtime runtime = Runtime.getRuntime();
+        // System.out.println("Memory used =
+        // "+(runtime.totalMemory()-runtime.freeMemory())/(1048576L)+", total users
+        // "+CloudWorkspace.getWorkspaceCount());
 
-	}
+        // if (moduleGroups == null)
+        // return ResponseEntity.ok()
+        // .contentType(MediaType.APPLICATION_JSON)
+        // .body(JSONWriter.getModulesJSON(modules,
+        // cloudWorkspace.getWorkspace()).toString());
+        // else
+        // return ResponseEntity.ok()
+        // .contentType(MediaType.APPLICATION_JSON)
+        // .body(JSONWriter.getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules),
+        // cloudWorkspace.getWorkspace()).toString());
 
-	@MessageMapping("/previousgroup")
-	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<String> previousgroup() throws Exception {
-		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+        if (moduleGroups == null)
+            return process();
+        else
+            return processGroup();
 
-		// Move to the previous module group. If not possible, it will return the same
-		// set of modules
-		moduleGroups.previousGroup();
+    }
 
-		// Return the parameters for these modules
-		return processgroup();
+    public ProcessResult previousGroup() throws Exception {
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-	}
+        // Move to the previous module group. If not possible, it will return the same
+        // set of modules
+        moduleGroups.previousGroup();
 
-	@MessageMapping("/haspreviousgroup")
-	@SendToUser("/queue/previousstatus")
-	public @ResponseBody ResponseEntity<String> haspreviousgroup() throws Exception {
-		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+        // Return the parameters for these modules
+        return processGroup();
 
-		String bodyString = moduleGroups != null ? String.valueOf(moduleGroups.hasPreviousGroup()) : "";
+    }
 
-		// Return the parameters for these modules
-		return ResponseEntity.ok()
-				.contentType(MediaType.TEXT_PLAIN)
-				.body(bodyString);
+    public boolean hasPreviousGroup() throws Exception {
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-	}
+        return moduleGroups != null ? moduleGroups.hasPreviousGroup() : false;
 
-	@MessageMapping("/nextgroup")
-	@SendToUser("/queue/result")
-	public @ResponseBody ResponseEntity<String> nextgroup() throws Exception {
-		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    }
 
-		// Move to the next module group. If not possible, it will return the same set
-		// of modules
-		moduleGroups.nextGroup();
+    public ProcessResult nextGroup() throws Exception {
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-		// Return the parameters for these modules
-		return processgroup();
+        // Move to the next module group. If not possible, it will return the same set
+        // of modules
+        moduleGroups.nextGroup();
 
-	}
+        // Return the parameters for these modules
+        return processGroup();
 
-	@MessageMapping("/hasnextgroup")
-	@SendToUser("/queue/nextstatus")
-	public @ResponseBody ResponseEntity<String> hasnextgroup() throws Exception {
-		ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
+    }
 
-		String bodyString = moduleGroups != null ? String.valueOf(moduleGroups.hasNextGroup()) : "";
+    public boolean hasNextGroup() throws Exception {
+        ModuleGroups moduleGroups = cloudModuleGroups.getModuleGroups();
 
-		// Return the parameters for these modules
-		return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(bodyString);
+        return moduleGroups != null ? moduleGroups.hasNextGroup() : false;
 
-	}
+    }
 }

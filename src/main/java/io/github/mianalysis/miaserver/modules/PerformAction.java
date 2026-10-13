@@ -8,12 +8,10 @@ import org.scijava.plugin.Plugin;
 import org.scijava.script.ScriptModule;
 
 import io.github.mianalysis.mia.MIA;
-import io.github.mianalysis.mia.module.Categories;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
 import io.github.mianalysis.mia.module.script.RunScript;
-import io.github.mianalysis.mia.module.script.RunScript.ParameterTypes;
 import io.github.mianalysis.mia.module.script.RunScript.ScriptLanguages;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.parameters.ChoiceP;
@@ -27,6 +25,7 @@ import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
 import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
+import io.github.mianalysis.miaserver.ServerCategories;
 import io.github.mianalysis.miaserver.parameters.ClickP;
 
 /**
@@ -58,7 +57,7 @@ public class PerformAction extends Module {
 
     @Override
     public Category getCategory() {
-        return Categories.WORKFLOW;
+        return ServerCategories.SCHOOLS;
     }
 
     @Override

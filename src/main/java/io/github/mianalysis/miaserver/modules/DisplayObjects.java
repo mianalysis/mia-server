@@ -1,234 +1,234 @@
-package io.github.mianalysis.miaserver.modules;
+// package io.github.mianalysis.miaserver.modules;
 
-import java.awt.Color;
-import java.awt.Polygon;
-import java.util.HashMap;
+// import java.awt.Color;
+// import java.awt.Polygon;
+// import java.util.HashMap;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.scijava.Priority;
-import org.scijava.plugin.Plugin;
+// import org.json.JSONArray;
+// import org.json.JSONObject;
+// import org.scijava.Priority;
+// import org.scijava.plugin.Plugin;
 
-import io.github.mianalysis.mia.module.AvailableModules;
-import io.github.mianalysis.mia.module.Category;
-import io.github.mianalysis.mia.module.Module;
-import io.github.mianalysis.mia.module.Modules;
-import io.github.mianalysis.mia.module.visualise.overlays.AbstractOverlay;
-import io.github.mianalysis.mia.object.Obj;
-import io.github.mianalysis.mia.object.Objs;
-import io.github.mianalysis.mia.object.Workspace;
-import io.github.mianalysis.mia.object.parameters.ChoiceP;
-import io.github.mianalysis.mia.object.parameters.InputObjectsP;
-import io.github.mianalysis.mia.object.parameters.Parameters;
-import io.github.mianalysis.mia.object.parameters.SeparatorP;
-import io.github.mianalysis.mia.object.parameters.text.IntegerP;
-import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
-import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
-import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
-import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
-import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
-import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
-import io.github.mianalysis.mia.object.system.Status;
-import io.github.mianalysis.mia.process.ColourFactory;
-import io.github.mianalysis.miaserver.ServerCategories;
-import io.github.mianalysis.miaserver.utils.ProcessResult;
-import net.imagej.ImageJ;
-import net.imagej.patcher.LegacyInjector;
+// import io.github.mianalysis.mia.module.AvailableModules;
+// import io.github.mianalysis.mia.module.Category;
+// import io.github.mianalysis.mia.module.Module;
+// import io.github.mianalysis.mia.module.Modules;
+// import io.github.mianalysis.mia.module.visualise.overlays.AbstractOverlay;
+// import io.github.mianalysis.mia.object.Obj;
+// import io.github.mianalysis.mia.object.Objs;
+// import io.github.mianalysis.mia.object.Workspace;
+// import io.github.mianalysis.mia.object.parameters.ChoiceP;
+// import io.github.mianalysis.mia.object.parameters.InputObjectsP;
+// import io.github.mianalysis.mia.object.parameters.Parameters;
+// import io.github.mianalysis.mia.object.parameters.SeparatorP;
+// import io.github.mianalysis.mia.object.parameters.text.IntegerP;
+// import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
+// import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
+// import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
+// import io.github.mianalysis.mia.object.refs.collections.ObjMetadataRefs;
+// import io.github.mianalysis.mia.object.refs.collections.ParentChildRefs;
+// import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
+// import io.github.mianalysis.mia.object.system.Status;
+// import io.github.mianalysis.mia.process.ColourFactory;
+// import io.github.mianalysis.miaserver.ServerCategories;
+// import io.github.mianalysis.miaserver.utils.ProcessResult;
+// import net.imagej.ImageJ;
+// import net.imagej.patcher.LegacyInjector;
 
-@Plugin(type = Module.class, priority = Priority.LOW, visible = true)
-public class DisplayObjects extends AbstractOverlay {
+// @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
+// public class DisplayObjects extends AbstractOverlay {
 
-    public static final String INPUT_SEPARATOR = "Object input";
+//     public static final String INPUT_SEPARATOR = "Object input";
 
-    public static final String INPUT_OBJECTS = "Objects to display";
+//     public static final String INPUT_OBJECTS = "Objects to display";
 
-    public static final String RENDERING_SEPARATOR = "Rendering controls";
+//     public static final String RENDERING_SEPARATOR = "Rendering controls";
 
-    public static final String RENDERING_MODE = "Rendering mode";
+//     public static final String RENDERING_MODE = "Rendering mode";
 
-    public static final String LINE_WIDTH = "Line width";
+//     public static final String LINE_WIDTH = "Line width";
 
-    public interface RenderingModes {
-        String FILL = "Fill";
-        String OUTLINE = "Outline";
+//     public interface RenderingModes {
+//         String FILL = "Fill";
+//         String OUTLINE = "Outline";
 
-        String[] ALL = new String[] { FILL, OUTLINE };
+//         String[] ALL = new String[] { FILL, OUTLINE };
 
-    }
+//     }
 
-    public interface ColourModes extends AbstractOverlay.ColourModes {
-    }
+//     public interface ColourModes extends AbstractOverlay.ColourModes {
+//     }
 
-    public interface SingleColours extends ColourFactory.SingleColours {
-    }
+//     public interface SingleColours extends ColourFactory.SingleColours {
+//     }
 
-    public static void main(String[] args) {
-        // The following must be called before initialising ImageJ
-        LegacyInjector.preinit();
+//     public static void main(String[] args) {
+//         // The following must be called before initialising ImageJ
+//         LegacyInjector.preinit();
 
-        // Creating a new instance of ImageJ
-        new ij.ImageJ();
+//         // Creating a new instance of ImageJ
+//         new ij.ImageJ();
 
-        // Launching MIA
-        new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
+//         // Launching MIA
+//         new ImageJ().command().run("io.github.mianalysis.mia.MIA_", false);
 
-        // Adding the current module to MIA's list of available modules.
-        AvailableModules.addModuleName(DisplayObjects.class);
+//         // Adding the current module to MIA's list of available modules.
+//         AvailableModules.addModuleName(DisplayObjects.class);
 
-    }
+//     }
 
-    public static JSONObject getOverlayJSON(Objs inputObjects, HashMap<Integer, Color> colours, String renderingMode,
-            int lineWidth)
-            throws InterruptedException {
-        JSONObject overlayJSON = new JSONObject();
+//     public static JSONObject getOverlayJSON(Objs inputObjects, HashMap<Integer, Color> colours, String renderingMode,
+//             int lineWidth)
+//             throws InterruptedException {
+//         JSONObject overlayJSON = new JSONObject();
 
-        JSONArray regionsJSONArray = new JSONArray();
-        for (Obj inputObject : inputObjects.values()) {
-            JSONObject objectOverlayJSON = new JSONObject();
+//         JSONArray regionsJSONArray = new JSONArray();
+//         for (Obj inputObject : inputObjects.values()) {
+//             JSONObject objectOverlayJSON = new JSONObject();
 
-            Polygon polygon = inputObject.getRoi(0).getPolygon();
+//             Polygon polygon = inputObject.getRoi(0).getPolygon();
 
-            objectOverlayJSON.put("x", polygon.xpoints);
-            objectOverlayJSON.put("y", polygon.ypoints);
-            objectOverlayJSON.put("n", polygon.npoints);
+//             objectOverlayJSON.put("x", polygon.xpoints);
+//             objectOverlayJSON.put("y", polygon.ypoints);
+//             objectOverlayJSON.put("n", polygon.npoints);
 
-            Color colour = colours.get(inputObject.getID());
+//             Color colour = colours.get(inputObject.getID());
 
-            String hex = String.format("#%02x%02x%02x%02x", colour.getRed(), colour.getGreen(), colour.getBlue(),
-                    colour.getAlpha());
-            objectOverlayJSON.put("fillcolour", hex);
-            objectOverlayJSON.put("strokecolour", hex);
-            objectOverlayJSON.put("renderingmode", renderingMode);
-            objectOverlayJSON.put("linewidth", String.valueOf(lineWidth));
+//             String hex = String.format("#%02x%02x%02x%02x", colour.getRed(), colour.getGreen(), colour.getBlue(),
+//                     colour.getAlpha());
+//             objectOverlayJSON.put("fillcolour", hex);
+//             objectOverlayJSON.put("strokecolour", hex);
+//             objectOverlayJSON.put("renderingmode", renderingMode);
+//             objectOverlayJSON.put("linewidth", String.valueOf(lineWidth));
 
-            regionsJSONArray.put(objectOverlayJSON);
+//             regionsJSONArray.put(objectOverlayJSON);
 
-        }
+//         }
 
-        overlayJSON.put("regions", regionsJSONArray);
+//         overlayJSON.put("regions", regionsJSONArray);
 
-        return overlayJSON;
+//         return overlayJSON;
 
-    }
+//     }
 
-    public DisplayObjects(Modules modules) {
-        // The first argument is the name by which the module will be seen in the GUI.
-        super("Display objects", modules);
-    }
+//     public DisplayObjects(Modules modules) {
+//         // The first argument is the name by which the module will be seen in the GUI.
+//         super("Display objects", modules);
+//     }
 
-    @Override
-    public Category getCategory() {
-        return ServerCategories.SCHOOLS;
-    }
+//     @Override
+//     public Category getCategory() {
+//         return ServerCategories.SCHOOLS;
+//     }
 
-    @Override
-    public String getVersionNumber() {
-        return "1.0.0";
-    }
+//     @Override
+//     public String getVersionNumber() {
+//         return "1.0.0";
+//     }
 
-    @Override
-    public String getDescription() {
-        return "";
-    }
+//     @Override
+//     public String getDescription() {
+//         return "";
+//     }
 
-    @Override
-    public Status process(Workspace workspace) {
-        String objectsName = parameters.getValue(INPUT_OBJECTS, workspace);
-        String renderingMode = parameters.getValue(RENDERING_MODE, workspace);
-        int lineWidth = parameters.getValue(LINE_WIDTH, workspace);
+//     @Override
+//     public Status process(Workspace workspace) {
+//         String objectsName = parameters.getValue(INPUT_OBJECTS, workspace);
+//         String renderingMode = parameters.getValue(RENDERING_MODE, workspace);
+//         int lineWidth = parameters.getValue(LINE_WIDTH, workspace);
 
-        Objs inputObjects = workspace.getObjects(objectsName);
+//         Objs inputObjects = workspace.getObjects(objectsName);
 
-        HashMap<Integer, Color> colours = getColours(inputObjects, workspace);
+//         HashMap<Integer, Color> colours = getColours(inputObjects, workspace);
 
-        try {
-            ProcessResult processResult = ProcessResult.getInstance();
-            JSONObject overlayJSON = getOverlayJSON(inputObjects, colours, renderingMode, lineWidth);
+//         try {
+//             ProcessResult processResult = ProcessResult.getInstance();
+//             JSONObject overlayJSON = getOverlayJSON(inputObjects, colours, renderingMode, lineWidth);
 
-            if (!processResult.has("overlays"))
-                processResult.put("overlays", new JSONArray());
+//             if (!processResult.has("overlays"))
+//                 processResult.put("overlays", new JSONArray());
 
-            ((JSONArray) processResult.get("overlays")).put(overlayJSON);
+//             ((JSONArray) processResult.get("overlays")).put(overlayJSON);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//         } catch (Exception e) {
+//             e.printStackTrace();
+//         }
 
-        if (showOutput)
-            inputObjects.convertToImageIDColours().show();
+//         if (showOutput)
+//             inputObjects.convertToImageIDColours().show();
 
-        return Status.PASS;
+//         return Status.PASS;
 
-    }
+//     }
 
-    @Override
-    protected void initialiseParameters() {
-        super.initialiseParameters();
+//     @Override
+//     protected void initialiseParameters() {
+//         super.initialiseParameters();
 
-        parameters.add(new SeparatorP(INPUT_SEPARATOR, this));
-        parameters.add(new InputObjectsP(INPUT_OBJECTS, this));
+//         parameters.add(new SeparatorP(INPUT_SEPARATOR, this));
+//         parameters.add(new InputObjectsP(INPUT_OBJECTS, this));
 
-        parameters.add(new SeparatorP(RENDERING_SEPARATOR, this));
-        parameters.add(new ChoiceP(RENDERING_MODE, this, RenderingModes.FILL, RenderingModes.ALL));
-        parameters.add(new IntegerP(LINE_WIDTH, this, 1));
+//         parameters.add(new SeparatorP(RENDERING_SEPARATOR, this));
+//         parameters.add(new ChoiceP(RENDERING_MODE, this, RenderingModes.FILL, RenderingModes.ALL));
+//         parameters.add(new IntegerP(LINE_WIDTH, this, 1));
 
-    }
+//     }
 
-    @Override
-    public Parameters updateAndGetParameters() {
-        Parameters returnedParameters = new Parameters();
+//     @Override
+//     public Parameters updateAndGetParameters() {
+//         Parameters returnedParameters = new Parameters();
 
-        returnedParameters.add(parameters.getParameter(INPUT_SEPARATOR));
-        returnedParameters.add(parameters.getParameter(INPUT_OBJECTS));
+//         returnedParameters.add(parameters.getParameter(INPUT_SEPARATOR));
+//         returnedParameters.add(parameters.getParameter(INPUT_OBJECTS));
 
-        returnedParameters.add(parameters.getParameter(RENDERING_SEPARATOR));
-        returnedParameters.add(parameters.getParameter(RENDERING_MODE));
+//         returnedParameters.add(parameters.getParameter(RENDERING_SEPARATOR));
+//         returnedParameters.add(parameters.getParameter(RENDERING_MODE));
 
-        switch ((String) parameters.getValue(RENDERING_MODE, null)) {
-            case RenderingModes.OUTLINE:
-                returnedParameters.add(parameters.getParameter(LINE_WIDTH));
-                break;
-        }
+//         switch ((String) parameters.getValue(RENDERING_MODE, null)) {
+//             case RenderingModes.OUTLINE:
+//                 returnedParameters.add(parameters.getParameter(LINE_WIDTH));
+//                 break;
+//         }
 
-        String inputObjectsName = parameters.getValue(INPUT_OBJECTS, null);
-        returnedParameters.addAll(super.updateAndGetParameters(inputObjectsName));
+//         String inputObjectsName = parameters.getValue(INPUT_OBJECTS, null);
+//         returnedParameters.addAll(super.updateAndGetParameters(inputObjectsName));
 
-        return returnedParameters;
+//         return returnedParameters;
 
-    }
+//     }
 
-    @Override
-    public ImageMeasurementRefs updateAndGetImageMeasurementRefs() {
-        return null;
-    }
+//     @Override
+//     public ImageMeasurementRefs updateAndGetImageMeasurementRefs() {
+//         return null;
+//     }
 
-    @Override
-    public ObjMeasurementRefs updateAndGetObjectMeasurementRefs() {
-        return null;
-    }
+//     @Override
+//     public ObjMeasurementRefs updateAndGetObjectMeasurementRefs() {
+//         return null;
+//     }
 
-    @Override
-    public ObjMetadataRefs updateAndGetObjectMetadataRefs() {
-        return null;
-    }
+//     @Override
+//     public ObjMetadataRefs updateAndGetObjectMetadataRefs() {
+//         return null;
+//     }
 
-    @Override
-    public MetadataRefs updateAndGetMetadataReferences() {
-        return null;
-    }
+//     @Override
+//     public MetadataRefs updateAndGetMetadataReferences() {
+//         return null;
+//     }
 
-    @Override
-    public ParentChildRefs updateAndGetParentChildRefs() {
-        return null;
-    }
+//     @Override
+//     public ParentChildRefs updateAndGetParentChildRefs() {
+//         return null;
+//     }
 
-    @Override
-    public PartnerRefs updateAndGetPartnerRefs() {
-        return null;
-    }
+//     @Override
+//     public PartnerRefs updateAndGetPartnerRefs() {
+//         return null;
+//     }
 
-    @Override
-    public boolean verify() {
-        return true;
-    }
-}
+//     @Override
+//     public boolean verify() {
+//         return true;
+//     }
+// }
