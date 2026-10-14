@@ -10,7 +10,7 @@ public class ProcessResult {
     public JSONObject image = null;
     public boolean hasPrevious = false;
     public boolean hasNext = false;
-
+    
     public byte[] reds = null;
     public byte[] greens = null;
     public byte[] blues = null;
@@ -62,5 +62,9 @@ public class ProcessResult {
 
     public byte[] getBlues() {
         return blues;
+    }
+
+    public int getStarCount() {
+        return StarCounter.getCount();
     }
 }

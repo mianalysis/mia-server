@@ -1,17 +1,23 @@
 package io.github.mianalysis.miaserver.utils;
 
-public class StarCounter {
-    private static int starCount = 0;
+import java.util.HashSet;
 
+public class StarCounter {
+    private static HashSet<String> starNames = new HashSet<>();
+    
     public static void reset() {
-        starCount = 0;
+        starNames = new HashSet<>();
     }
 
     public static int getCount() {
-        return starCount;
+        return starNames.size();
     }
 
-    public void incrementCount() {
-        starCount++;
+    public static void addStar(String starName) {
+        starNames.add(starName);
+    }
+
+    public static HashSet<String> getAllStars() {
+        return starNames;
     }
 }
