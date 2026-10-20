@@ -1,23 +1,34 @@
 package io.github.mianalysis.miaserver.modules;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+
 import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
+import ij.CompositeImage;
 import ij.ImagePlus;
+import ij.plugin.Concatenator;
+import ij.plugin.HyperStackConverter;
 import ij.plugin.RGBStackConverter;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
+import io.github.mianalysis.mia.MIA;
 import io.github.mianalysis.mia.module.Category;
 import io.github.mianalysis.mia.module.Module;
 import io.github.mianalysis.mia.module.Modules;
+import io.github.mianalysis.mia.module.images.configure.SetLookupTable;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.image.Image;
 import io.github.mianalysis.mia.object.parameters.BooleanP;
 import io.github.mianalysis.mia.object.parameters.ChoiceP;
 import io.github.mianalysis.mia.object.parameters.InputImageP;
+import io.github.mianalysis.mia.object.parameters.ParameterGroup;
 import io.github.mianalysis.mia.object.parameters.Parameters;
+import io.github.mianalysis.mia.object.parameters.text.StringP;
+import io.github.mianalysis.mia.object.parameters.text.TextAreaP;
 import io.github.mianalysis.mia.object.refs.collections.ImageMeasurementRefs;
 import io.github.mianalysis.mia.object.refs.collections.MetadataRefs;
 import io.github.mianalysis.mia.object.refs.collections.ObjMeasurementRefs;
@@ -31,6 +42,8 @@ import io.github.mianalysis.miaserver.utils.ProcessResult;
 @Plugin(type = Module.class, priority = Priority.LOW, visible = true)
 public class DisplaySimpleImage extends Module {
 
+    public static final String ADD_IMAGE = "Add image";
+
     public static final String IMAGE_TO_DISPLAY = "Image name";
 
     public static final String TYPE = "Type";
@@ -42,6 +55,8 @@ public class DisplaySimpleImage extends Module {
     public static final String SHOW_ZOOM_CONTROL = "Show zoom control";
 
     public static final String DEFAULT_CONTROl = "Default control";
+
+    public static final String ABOUT_TEXT = "About text";
 
     public interface Types {
         String COLOUR = "Colour";
@@ -60,19 +75,19 @@ public class DisplaySimpleImage extends Module {
     }
 
     public JSONObject getCoreImageJSON(int hash, Workspace workspace) {
-        String inputImageName = parameters.getValue(IMAGE_TO_DISPLAY, workspace);
         boolean showProbeControl = parameters.getValue(SHOW_PROBE_CONTROL, workspace);
         boolean showSelectControl = parameters.getValue(SHOW_SELECT_CONTROL, workspace);
         boolean showZoomControl = parameters.getValue(SHOW_ZOOM_CONTROL, workspace);
         String defaultControl = parameters.getValue(DEFAULT_CONTROl, workspace);
+        String aboutText = parameters.getValue(ABOUT_TEXT, workspace);
 
         JSONObject imageJSON = new JSONObject();
-        imageJSON.put("name", inputImageName);
         imageJSON.put("hashcode", hash);
         imageJSON.put("showprobecontrol", showProbeControl);
         imageJSON.put("showselectcontrol", showSelectControl);
         imageJSON.put("showzoomcontrol", showZoomControl);
         imageJSON.put("defaultcontrol", defaultControl);
+        imageJSON.put("aboutText", aboutText);
 
         return imageJSON;
 
@@ -128,13 +143,14 @@ public class DisplaySimpleImage extends Module {
 
     @Override
     public Status process(Workspace workspace) {
-        String inputImageName = parameters.getValue(IMAGE_TO_DISPLAY, workspace);
-        Image image = workspace.getImage(inputImageName);
+        LinkedHashMap<Integer, Parameters> imageParameters = ((ParameterGroup) parameters.getParameter(ADD_IMAGE))
+                .getCollections(true);
+
         // int hash = 31 * getImageHash(image);
         int hash = 1;
         ProcessResult processResult = ProcessResult.getInstance();
-       JSONObject imageJSON = getCoreImageJSON(hash, workspace);
-       processResult.image = imageJSON;
+        JSONObject imageJSON = getCoreImageJSON(hash, workspace);
+        processResult.image = imageJSON;
 
         // Checking if this hash is already present. If it is, don't bother updating
         // pixel information
@@ -164,9 +180,33 @@ public class DisplaySimpleImage extends Module {
         // throw new RuntimeException(e);
         // }
 
+        ImagePlus[] ipls = new ImagePlus[imageParameters.size()];
+        int i = 0;
+        int nChannels = 0;
+        ArrayList<LUT> luts = new ArrayList<>();
+        for (Parameters currImageParameters : imageParameters.values()) {
+            ImagePlus currIpl = workspace.getImage(currImageParameters.getValue(IMAGE_TO_DISPLAY, workspace))
+                    .getImagePlus().duplicate();
+            for (LUT lut : currIpl.getLuts())
+                luts.add(lut);
+            nChannels += currIpl.getNChannels();
+            ipls[i] = currIpl;
+            i++;
+        }
+        
+        ImagePlus ipl = Concatenator.run(ipls);
+        
+        if (ipl.getStack().size() > 1)
+            ipl = HyperStackConverter.toHyperStack(ipl, nChannels, 1, 1);
+
+        if (!ipl.isComposite())
+            ipl = new CompositeImage(ipl, CompositeImage.COLOR);
+        
+        for (int c=0;c<ipl.getNChannels();c++)
+            ((CompositeImage) ipl).setChannelLut(luts.get(c), c+1);
+
         // imageJSON.put("pixels",
         // Base64.getEncoder().encodeToString(stream.toByteArray()));
-        ImagePlus ipl = image.getImagePlus().duplicate();
         RGBStackConverter.convertToRGB(ipl);
         ColorProcessor ipr = (ColorProcessor) ipl.getProcessor();
         int imSize = ipr.getWidth() * ipr.getHeight();
@@ -198,11 +238,15 @@ public class DisplaySimpleImage extends Module {
 
     @Override
     protected void initialiseParameters() {
-        parameters.add(new InputImageP(IMAGE_TO_DISPLAY, this));
+        Parameters templateParameters = new Parameters();
+        templateParameters.add(new InputImageP(IMAGE_TO_DISPLAY, this));
+
+        parameters.add(new ParameterGroup(ADD_IMAGE, this, templateParameters, 1));
         parameters.add(new BooleanP(SHOW_PROBE_CONTROL, this, false));
         parameters.add(new BooleanP(SHOW_SELECT_CONTROL, this, false));
         parameters.add(new BooleanP(SHOW_ZOOM_CONTROL, this, false));
         parameters.add(new ChoiceP(DEFAULT_CONTROl, this, DefaultControls.MOVE, DefaultControls.ALL));
+        parameters.add(new TextAreaP(ABOUT_TEXT, this, true));
 
     }
 

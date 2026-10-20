@@ -54,11 +54,5 @@ public class Initialiser {
         } catch (JSONException | IOException e) {
             e.printStackTrace();
         }
-    }
-
-    // @Override
-    // public void run() {
-    // throw new UnsupportedOperationException("Unimplemented method 'run'");
-    // }
-    
+    }    
 }
