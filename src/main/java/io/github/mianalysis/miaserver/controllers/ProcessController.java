@@ -77,7 +77,7 @@ public class ProcessController {
             File workflowFile = new File(modules.getAnalysisFilename());
 
             ProcessResult.getInstance().clear();
-            ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowDisplayName(workflowFile);
+            ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowFullName(workflowFile);
             ProcessResult.getInstance().modules = JSONWriter.getModulesJSON(modules, cloudWorkspace.getWorkspace());
             modules.execute(cloudWorkspace.getWorkspace());
 
@@ -108,7 +108,7 @@ public class ProcessController {
             File workflowFile = new File(modules.getAnalysisFilename());
 
             ProcessResult.getInstance().clear();
-            ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowDisplayName(workflowFile);
+            ProcessResult.getInstance().workflowName = JSONWriter.getWorkflowFullName(workflowFile);
             ProcessResult.getInstance().modules = JSONWriter
                     .getModulesJSON(moduleGroups.getCurrentGroup().getModules(modules), cloudWorkspace.getWorkspace());
             ProcessResult.getInstance().hasPrevious = hasPreviousGroup();

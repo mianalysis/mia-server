@@ -65,6 +65,10 @@ public class ProcessResult {
     }
 
     public int getStarCount() {
-        return StarCounter.getCount();
+        return StarCounter.getStarCount();
+    }
+
+    public int getWorkflowStarCount() {
+        return StarCounter.getWorkflowStarCount(workflowName);
     }
 }
