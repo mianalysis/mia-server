@@ -8,8 +8,10 @@ public class ProcessResult {
     public JSONArray message = null;
     public JSONArray modules = null;
     public JSONObject image = null;
+    public JSONArray overlays = null;
     public boolean hasPrevious = false;
     public boolean hasNext = false;
+    public JSONObject clickListener = null;
     
     public byte[] reds = null;
     public byte[] greens = null;
@@ -44,12 +46,28 @@ public class ProcessResult {
         return image;
     }
 
+    public JSONArray getOverlays() {
+        return overlays;
+    }
+
+    public void setOverlays(JSONArray overlays) {
+        this.overlays = overlays;
+    }
+
     public boolean hasPreviousGroup() {
         return hasPrevious;
     }
 
     public boolean hasNextGroup() {
         return hasNext;
+    }
+
+    public JSONObject getClickListener() {
+        return clickListener;
+    }
+
+    public void setClickListener(JSONObject clickListener) {
+        this.clickListener = clickListener;
     }
 
     public byte[] getReds() {

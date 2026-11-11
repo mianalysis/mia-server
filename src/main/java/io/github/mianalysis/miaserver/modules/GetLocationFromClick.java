@@ -1,5 +1,6 @@
 package io.github.mianalysis.miaserver.modules;
 
+import org.json.JSONObject;
 import org.scijava.Priority;
 import org.scijava.plugin.Plugin;
 
@@ -27,6 +28,8 @@ import io.github.mianalysis.mia.object.refs.collections.PartnerRefs;
 import io.github.mianalysis.mia.object.system.Status;
 import io.github.mianalysis.miaserver.ServerCategories;
 import io.github.mianalysis.miaserver.parameters.ClickListenerP;
+import io.github.mianalysis.miaserver.utils.JSONWriter;
+import io.github.mianalysis.miaserver.utils.ProcessResult;
 import net.imagej.ImageJ;
 import net.imagej.patcher.LegacyInjector;
 
@@ -78,6 +81,10 @@ public class GetLocationFromClick extends Module {
 
     @Override
     public Status process(Workspace workspace) {
+        // Telling the result there will be a click listener
+        JSONObject clickListenerParameter = JSONWriter.getParameterJSON(parameters.getParameter(LOCATION), null, null);
+        ProcessResult.getInstance().setClickListener(clickListenerParameter);
+
         // Getting parameters
         String location = parameters.getValue(LOCATION, workspace);
         String outputLocationsName = parameters.getValue(OUTPUT_LOCATIONS, workspace);
