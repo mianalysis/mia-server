@@ -15,6 +15,7 @@ import io.github.mianalysis.mia.object.ObjMetadata;
 import io.github.mianalysis.mia.object.Objs;
 import io.github.mianalysis.mia.object.Workspace;
 import io.github.mianalysis.mia.object.measurements.Measurement;
+import io.github.mianalysis.mia.object.parameters.BooleanP;
 import io.github.mianalysis.mia.object.parameters.InputObjectsP;
 import io.github.mianalysis.mia.object.parameters.ObjectMeasurementP;
 import io.github.mianalysis.mia.object.parameters.ObjectMetadataP;
@@ -43,9 +44,10 @@ public class CreateObjectClassifier extends Module {
     public static String CLASSES = "Classes (comma sep.)";
     public static String ADD_MEASUREMENT = "Add measurement";
     public static String MEASUREMENT = "Measurement";
+    public static String MEASUREMENT_ACTIVE = "Measurement active";
 
     public CreateObjectClassifier(Modules modules) {
-        super("Create object classifier", modules);     
+        super("Create object classifier", modules);
     }
 
     @Override
@@ -62,8 +64,9 @@ public class CreateObjectClassifier extends Module {
         ArrayList<String> measurementNames = new ArrayList<>();
 
         LinkedHashMap<Integer, Parameters> collections = parameterGroup.getCollections(true);
-        for (Parameters collection:collections.values())
-            measurementNames.add(((ObjectMeasurementP) collection.get(MEASUREMENT)).getValue(workspace));
+        for (Parameters collection : collections.values())
+            if ((boolean) collection.getValue(MEASUREMENT_ACTIVE, workspace))
+                measurementNames.add(collection.getValue(MEASUREMENT, workspace));
 
         return measurementNames;
 
@@ -75,20 +78,22 @@ public class CreateObjectClassifier extends Module {
         // Initialising instances
         for (String measurementName : measurementNames)
             attributes.add(new Attribute(measurementName));
-        
+
         attributes.add(new Attribute("CLASS", classes));
 
         return attributes;
 
     }
 
-    public static Instances createInstances(Objs inputObjects, boolean trainingMode, ArrayList<Attribute> attributes, ArrayList<String> classes, @Nullable String classMetadataItem) {
+    public static Instances createInstances(Objs inputObjects, boolean trainingMode, ArrayList<Attribute> attributes,
+            ArrayList<String> classes, @Nullable String classMetadataItem) {
         Instances data = new Instances("Instances", attributes, 0);
 
         // Adding data
         for (Obj inputObject : inputObjects.values()) {
             // In training mode, only those with assigned classes are included
-            if (trainingMode && (inputObject.getMetadataItem(classMetadataItem) == null || inputObject.getMetadataItem(classMetadataItem).getValue().equals("")))
+            if (trainingMode && (inputObject.getMetadataItem(classMetadataItem) == null
+                    || inputObject.getMetadataItem(classMetadataItem).getValue().equals("")))
                 continue;
 
             data.add(createInstance(inputObject, attributes, classes, classMetadataItem));
@@ -101,11 +106,12 @@ public class CreateObjectClassifier extends Module {
 
     }
 
-    public static Instance createInstance(Obj inputObject, ArrayList<Attribute> attributes, ArrayList<String> classes, @Nullable String classMetadataItem) {
+    public static Instance createInstance(Obj inputObject, ArrayList<Attribute> attributes, ArrayList<String> classes,
+            @Nullable String classMetadataItem) {
         DenseInstance instance = new DenseInstance(attributes.size());
 
         // Adding measurements
-        for (int i=0;i<attributes.size()-1;i++) {
+        for (int i = 0; i < attributes.size() - 1; i++) {
             String name = attributes.get(i).name();
             Measurement measurement = inputObject.getMeasurement(name);
             if (measurement == null) {
@@ -117,7 +123,8 @@ public class CreateObjectClassifier extends Module {
             }
         }
 
-        // Adding class and skipping if missing (i.e. when preparing instances for classification)
+        // Adding class and skipping if missing (i.e. when preparing instances for
+        // classification)
         if (classMetadataItem == null) {
             instance.setMissing(attributes.size() - 1);
         } else {
@@ -139,7 +146,7 @@ public class CreateObjectClassifier extends Module {
         String classMetadataItem = parameters.getValue(CLASS_METADATA_ITEM, workspace);
         String classesString = parameters.getValue(CLASSES, workspace);
         ParameterGroup parameterGroup = (ParameterGroup) parameters.get(ADD_MEASUREMENT);
-        
+
         // Getting objects
         Objs inputObjects = workspace.getObjects(inputObjectsName);
 
@@ -154,7 +161,7 @@ public class CreateObjectClassifier extends Module {
             tree = new J48();
             tree.setOptions(new String[] { "-U" });
             tree.buildClassifier(dataset);
-            
+
         } catch (Exception e) {
             MIA.log.writeError(e);
             return Status.FAIL;
@@ -174,6 +181,7 @@ public class CreateObjectClassifier extends Module {
 
         Parameters templateParameters = new Parameters();
         templateParameters.add(new ObjectMeasurementP(MEASUREMENT, this));
+        templateParameters.add(new BooleanP(MEASUREMENT_ACTIVE, this, true));
         parameters.add(new ParameterGroup(ADD_MEASUREMENT, this, templateParameters));
 
     }
@@ -185,7 +193,7 @@ public class CreateObjectClassifier extends Module {
         String inputObjectsName = parameters.getValue(INPUT_OBJECTS, null);
         ParameterGroup parameterGroup = (ParameterGroup) parameters.get(ADD_MEASUREMENT);
         LinkedHashMap<Integer, Parameters> collections = parameterGroup.getCollections(true);
-        for (Parameters collection:collections.values())
+        for (Parameters collection : collections.values())
             ((ObjectMeasurementP) collection.get(MEASUREMENT)).setObjectName(inputObjectsName);
 
         return parameters;
